@@ -1,0 +1,32 @@
+{
+  "name": "enslavism",
+  "version": "0.0.0",
+  "description": "A framework to deploy authoritative WebRTC game servers with a master",
+  "main": "enslavism.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KordonBleu/enslavism.git"
+  },
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/KordonBleu/enslavism/issues"
+  },
+  "homepage": "https://github.com/KordonBleu/enslavism",
+  "keywords": [
+    "enslavism",
+    "master",
+    "master server",
+    "game",
+    "webrtc",
+    "datachannel",
+    "data channel"
+  ],
+  "dependencies": {
+    "wrtc": "0.0.x",
+    "ws": "1.x"
+  },
+  "optionalDependencies": {
+    "bufferutil": "1.x",
+    "utf-8-validate": "1.x"
+  }
+}
