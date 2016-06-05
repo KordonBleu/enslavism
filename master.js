@@ -4,7 +4,7 @@ const http = require('http'),
 	fs = require('fs'),
 	WebSocketServer = require('ws').Server;
 
-var clientSourceCode = fs.readFileSync('./client.js', "utf8");
+var clientSourceCode = fs.readFileSync('./client-bundle.js', 'utf8');
 
 class Master {
 	constructor(server) {

@@ -22,10 +22,14 @@
   ],
   "dependencies": {
     "wrtc": "0.0.x",
-    "ws": "1.x"
+    "ws": "1.x",
+	"webmake": "0.3.x"
   },
   "optionalDependencies": {
     "bufferutil": "1.x",
     "utf-8-validate": "1.x"
+  },
+  "scripts": {
+    "postinstall": "./node_modules/webmake/bin/webmake --ignore-errors client.js client-bundle.js"
   }
 }
