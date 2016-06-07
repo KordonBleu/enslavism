@@ -1,5 +1,7 @@
 'use strict';
 
+const ipaddr = require('ipaddr.js');
+
 const isNode = typeof module !== 'undefined' && typeof module.exports !== 'undefined';
 
 function stringToBuffer(string) {
@@ -23,26 +25,26 @@ function bufferToString(arrayBuffer) {
 	}
 }
 
-module.exports = {
-	register: {
-		value: 0,
-		serialize: () => {
-		},
-		deserialize: () => {
-		}
-	},
-	addServer: {
-		value: 0,
-		serialize: () => {
-		},
-		deserialize: () => {
-		}
-	},
-	removeServer: {
-		value: 0,
-		serialize: () => {
-		},
-		deserialize: () => {
-		}
+// the protocol is binary BUT is JSON-based
+// however the user will free to override it at some point
+class Serializator {
+	constructor(type) {
+		this.type = type;
+	}
+	serialize(userData) {
+		let view = new Uint8Array(1 + userData.byteLength);
+		view[0] = this.type;
+		view.set(new Uint8Array(stringToBuffer(JSON.stringify(userData))), 1);
+
+		return view.buffer;
+	}
+	deserialize(buffer) {
+		return JSON.parse(bufferToString(buffer.slice(1)));
 	}
 }
+
+module.exports = {
+	register: new Serializator(0),
+	addSlaves: new Serializator(1),
+	removeSlaves: new Serializator(2),
+};

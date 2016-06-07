@@ -23,7 +23,8 @@
   "dependencies": {
     "wrtc": "0.0.x",
     "ws": "1.x",
-	"webmake": "0.3.x"
+	"webmake": "0.3.x",
+    "ipaddr.js": "1.x"
   },
   "optionalDependencies": {
     "bufferutil": "1.x",
