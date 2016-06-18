@@ -3,14 +3,14 @@
 const http = require('http'),
 	fs = require('fs'),
 	WebSocketServer = require('ws').Server,
-	message = require('./message.js');
+	message = require('./message.js'),
+	MAX_UINT32 = Math.pow(2, 32) - 1;
 
 var clientSourceCode = fs.readFileSync('./client-bundle.js', 'utf8');
 
 class Master {
 	constructor(server) {
-		//this._slaves = [];
-		this._slaves = new Map();
+		let slaveId = 0;
 
 		if (typeof server === 'number') {
 			this._httpServer = http.createServer((req, res) => {
@@ -46,24 +46,18 @@ class Master {
 		this._clientsSocket = new WebSocketServer({server: this._httpServer, path: '/enslavism/clients'});
 
 		this._slavesSocket.on('connection', ws => {
-			this._slaves.push(ws);
+			ws.slaveId = slaveId++;
+			if (slaveId > MAX_UINT32) console.log("Oh boy do something");
 
 			ws.on('message', msg => {
 				switch (new Uint8Array(msg)[0]) {
 					case message.register.type:
-						this._slaves.set(ws, message.register.deserialize(msg));
-						break;
-				}
-			});
-
-			ws.on('close', () => {
-				for (let slaveWs of this._slaves.keys()) {
-					if (slaveWs === ws) this._slaves.delete(slaveWs);
+						ws.slaveUserData = message.register.deserialize(msg);
 				}
 			});
 		});
 		this._clientsSocket.on('connection', ws => {
-			ws.send(message.addSlaves([...myMap.values()]));
+			ws.send(message.addSlaves.serialize(this._slavesSocket.clients));
 		});
 	}
 }
