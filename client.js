@@ -9,7 +9,8 @@ let MasterConnection = (() => {
 	// it works fine but as it is a hack it will be replaced by ES6 modules when they'll be available
 
 	class SlaveConnection {
-		constructor(userData) {
+		constructor(id, userData) {
+			this.id = id;
 			this.userData = userData;
 		}
 		connect() {
@@ -37,22 +38,23 @@ let MasterConnection = (() => {
 	class MasterConnection {
 		constructor(url) {
 			this._slaves = [];
-			this._masterSocket = new WebSocket(url);
+			this._masterSocket = new WebSocket(url + '/enslavism/clients');
 			this._masterSocket.binaryType = 'arraybuffer';
 			this._masterSocket.addEventListener('message', (msg) => {
-				switch (new Uint8Array(msg)[0]) {
-					case message.addServers.type:
-						message.addServers.deserialize(msg).forEach((userData) => {
-							this._slaves.push(new SlaveConnection(userData));
+				switch (new Uint8Array(msg.data)[0]) {
+					case message.addSlaves.type:
+						console.log('got addServers');
+						message.addSlaves.deserialize(msg.data).forEach(slave => {
+							this._slaves.push(new SlaveConnection(slave.id, slave.userData));
 						});
 						break;
-					case message.removeServers.type:
-						message.removeServers.deserialize(msg).forEach((rmId) => {
+					case message.removeSlaves.type:
+						console.log('got removeServers');
+						message.removeSlaves.deserialize(msg.data).forEach((rmId) => {
 							this._slaves.splice(rmId, 1);
 						});
 						break;
 				}
-				console.log(this._slaves);
 			});
 		}
 		get slaves() {

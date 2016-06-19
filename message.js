@@ -1,8 +1,8 @@
-'use strict';
-
 const isNode = typeof module !== 'undefined' && typeof module.exports !== 'undefined';
 
 const message = (() => {
+	'use strict';
+
 	function stringToBuffer(string) {
 		if (isNode) {
 			let buf = new Buffer(string, 'utf8');
@@ -45,14 +45,14 @@ const message = (() => {
 	}
 
 	let addSlavesSerializator = new Serializator(1);
-	addSlavesSerializator.serialize = slaves => {
+	addSlavesSerializator.serialize = function(slaves) { // fat arrow functions do not bind `this` to  `addSlavesSerializator`
 		let userDataBufs = [],
 			userDataBufsLength = 0;
 
 		slaves.forEach(slave => {
 			let buf = stringToBuffer(JSON.stringify(slave.slaveUserData));
 			userDataBufsLength += buf.byteLength;
-			userDataBuf.push(buf);
+			userDataBufs.push(buf);
 		});
 
 		let aView = new Uint8Array(1 + userDataBufsLength + userDataBufs.length*6),
@@ -61,24 +61,33 @@ const message = (() => {
 
 		dView.setUint8(0, this.type);
 		userDataBufs.forEach((userDataBuf, i) => {
+			console.log(userDataBuf.byteLength);
 			dView.setUint32(offset, slaves[i].slaveId);
 			dView.setUint16(offset + 4, userDataBuf.byteLength);
-			aView.set(new Uint8Array(userDataBuf), 6);
+			aView.set(new Uint8Array(userDataBuf), offset + 6);
 
 			offset += 6 + userDataBuf.length;
 		});
+
+		return aView.buffer;
 	}
-	addSlavesSerializator.deserialize = buf => {
+	addSlavesSerializator.deserialize = function(buf) {
+		console.log(buf);
 		let slaves = [],
 			offset = 1,
 			dView = new DataView(buf);
 
 		while (offset !== buf.byteLength) {
+			let userDataLength = dView.getUint16(offset + 4);
+			console.log(offset, buf.byteLength, userDataLength, new Uint8Array(buf));
 			slaves.push({
 				id: dView.getUint32(offset),
-				userData: bufferToString(buf.splice(offset + 6, offset + 6 + dView.getUint16(offset + 4)))
+				userData: bufferToString(buf.slice(offset + 6, offset + 6 + userDataLength))
 			});
+			offset += 6 + userDataLength;
 		}
+
+		return slaves;
 	};
 
 	return {

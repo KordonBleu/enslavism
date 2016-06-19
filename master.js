@@ -47,7 +47,7 @@ class Master {
 
 		this._slavesSocket.on('connection', ws => {
 			ws.slaveId = slaveId++;
-			if (slaveId > MAX_UINT32) console.log("Oh boy do something");
+			if (slaveId > MAX_UINT32) console.log('Oh boy do something');
 
 			ws.on('message', msg => {
 				switch (new Uint8Array(msg)[0]) {
@@ -57,6 +57,7 @@ class Master {
 			});
 		});
 		this._clientsSocket.on('connection', ws => {
+			console.log('client connected');
 			ws.send(message.addSlaves.serialize(this._slavesSocket.clients));
 		});
 	}
