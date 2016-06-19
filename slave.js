@@ -5,11 +5,14 @@
 
 const webrtc = require('wrtc'),
 	WebSocket = require('ws'),
-	message = require('./master.js');
+	message = require('./message.js');
 
 class Slave {
-	constructor(wsUrl) {
+	constructor(wsUrl, userData) {
 		let ws = new WebSocket(wsUrl + '/enslavism/slaves');
+		ws.on('open', () => {
+			ws.send(message.register.serialize(userData));
+		});
 	}
 
 	stuff() {

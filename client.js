@@ -5,9 +5,8 @@
 
 let MasterConnection = (() => {
 	'use strict';
-
-	let message = require('./message.js');
-	console.log(message);
+	'include message.js';//this marks where to insert the whole file message.js
+	// it works fine but as it is a hack it will be replaced by ES6 modules when they'll be available
 
 	class SlaveConnection {
 		constructor(userData) {
@@ -53,6 +52,7 @@ let MasterConnection = (() => {
 						});
 						break;
 				}
+				console.log(this._slaves);
 			});
 		}
 		get slaves() {

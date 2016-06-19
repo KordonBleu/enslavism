@@ -6,7 +6,7 @@ const http = require('http'),
 	message = require('./message.js'),
 	MAX_UINT32 = Math.pow(2, 32) - 1;
 
-var clientSourceCode = fs.readFileSync('./client-bundle.js', 'utf8');
+let clientSourceCode = fs.readFileSync('./client.js', 'utf8').replace('\'include message.js\';', fs.readFileSync('./message.js', 'utf8'));
 
 class Master {
 	constructor(server) {
@@ -24,7 +24,7 @@ class Master {
 			});
 			this._httpServer.listen(server);
 		} else {
-			var userDefReqListeners = server.listeners('request');
+			let userDefReqListeners = server.listeners('request');
 
 			server.removeAllListeners('request');
 			server.on('request', (req, res) => {

@@ -5,7 +5,8 @@ const http = require('http'),
 var masterServer1 = new enslavism.Master(8080);
 
 var httpServer = http.createServer((req, res) => {
-	fs.readFile('./tests/index.html', (err, data) => {
+	let path = req.url === '/' ? '/index.html' : req.url;
+	fs.readFile('./tests' + path, (err, data) => {
 		if (err) console.log(err);
 		res.writeHead(200);
 		res.end(data);
