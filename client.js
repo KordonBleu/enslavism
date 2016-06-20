@@ -9,9 +9,10 @@ let MasterConnection = (() => {
 	// it works fine but as it is a hack it will be replaced by ES6 modules when they'll be available
 
 	class SlaveConnection {
-		constructor(id, userData) {
+		constructor(id, userData, master) {
 			this.id = id;
 			this.userData = userData;
+			this.master = master;
 		}
 		connect() {
 			// create a connection
@@ -20,17 +21,17 @@ let MasterConnection = (() => {
 			let client = new RTCPeerConnection();
 
 			let dc = client.createDataChannel('test');
-			dc.onopen = function() {
+			dc.onopen = () => {
 				console.log('Data channel open');
-			}
-			dc.onmessage = function(e) {
+			};
+			dc.onmessage = (e) => {
 				console.log(e);
-			}
-			client.createOffer().then(function(offer) {
-				client.setLocalDescription(offer);
-				console.log(offer.sdp);
+			};
+			client.createOffer().then(offer => {
+				console.log(this);
 				let descTest = new RTCSessionDescription(offer);
-				console.log(descTest);
+				client.setLocalDescription(descTest);
+				this.master._masterSocket.send(message.offer.serialize(this.id, offer.sdp));
 			});
 		}
 	}
@@ -45,7 +46,7 @@ let MasterConnection = (() => {
 					case message.addSlaves.type:
 						console.log('got addServers');
 						message.addSlaves.deserialize(msg.data).forEach(slave => {
-							this._slaves.push(new SlaveConnection(slave.id, slave.userData));
+							this._slaves.push(new SlaveConnection(slave.id, slave.userData, this));
 						});
 						break;
 					case message.removeSlaves.type:

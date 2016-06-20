@@ -10,7 +10,8 @@ let clientSourceCode = fs.readFileSync('./client.js', 'utf8').replace('\'include
 
 class Master {
 	constructor(server) {
-		let slaveId = 0;
+		let slaveId = 0,
+			wrapMode = false;
 
 		if (typeof server === 'number') {
 			this._httpServer = http.createServer((req, res) => {
@@ -46,19 +47,45 @@ class Master {
 		this._clientsSocket = new WebSocketServer({server: this._httpServer, path: '/enslavism/clients'});
 
 		this._slavesSocket.on('connection', ws => {
+			if (slaveId > MAX_UINT32) {
+				slaveId = 0;
+				wrapMode = true;
+			}
+			if (wrapMode) {
+				if (this._slavesSocket.clients.length < MAX_UINT32) ws.close();
+				else while (slaveId <= MAX_UINT32 && this._slavesSocket.clients.find((slave) => {
+					return slave.slaveId === slaveId;
+				}) !== undefined) ++slaveId;
+			}
 			ws.slaveId = slaveId++;
-			if (slaveId > MAX_UINT32) console.log('Oh boy do something');
 
 			ws.on('message', msg => {
 				switch (new Uint8Array(msg)[0]) {
 					case message.register.type:
 						ws.slaveUserData = message.register.deserialize(msg);
+						let newSlaveBuf = message.addSlaves.serialize([ws]);
+						this._clientsSocket.clients.forEach(client => {
+							client.send(newSlaveBuf);
+						});
 				}
+			});
+			ws.on('close', () => {
+				let removeSlaveBuf = message.removeSlaves.serialize([ws.slaveId]);
+				this._clientsSocket.clients.forEach(client => {
+					client.send(removeSlaveBuf);
+				});
 			});
 		});
 		this._clientsSocket.on('connection', ws => {
 			console.log('client connected');
 			ws.send(message.addSlaves.serialize(this._slavesSocket.clients));
+
+			ws.on('message', msg => {
+				switch (new Uint8Array(msg)[0]) {
+					case message.offer.type:
+						console.log('got an offer from a client');
+				}
+			});
 		});
 	}
 }

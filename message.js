@@ -61,7 +61,6 @@ const message = (() => {
 
 		dView.setUint8(0, this.type);
 		userDataBufs.forEach((userDataBuf, i) => {
-			console.log(userDataBuf.byteLength);
 			dView.setUint32(offset, slaves[i].slaveId);
 			dView.setUint16(offset + 4, userDataBuf.byteLength);
 			aView.set(new Uint8Array(userDataBuf), offset + 6);
@@ -72,17 +71,15 @@ const message = (() => {
 		return aView.buffer;
 	}
 	addSlavesSerializator.deserialize = function(buf) {
-		console.log(buf);
 		let slaves = [],
 			offset = 1,
 			dView = new DataView(buf);
 
 		while (offset !== buf.byteLength) {
 			let userDataLength = dView.getUint16(offset + 4);
-			console.log(offset, buf.byteLength, userDataLength, new Uint8Array(buf));
 			slaves.push({
 				id: dView.getUint32(offset),
-				userData: bufferToString(buf.slice(offset + 6, offset + 6 + userDataLength))
+				userData: JSON.parse(bufferToString(buf.slice(offset + 6, offset + 6 + userDataLength)))
 			});
 			offset += 6 + userDataLength;
 		}
@@ -90,10 +87,32 @@ const message = (() => {
 		return slaves;
 	};
 
+	let offerSerializator = new Serializator(3);
+	offerSerializator.serialize = function(id, sdp) {
+		let sdpBuf = stringToBuffer(sdp),
+			aView = new Uint8Array(5 + sdpBuf.byteLength),
+			dView = new DataView(aView.buffer);
+
+		aView[0] = this.type;
+		dView.setUint32(1, id);
+		aView.set(new Uint8Array(sdpBuf), 5);
+
+		return aView.buffer;
+	}
+	offerSerializator.deserialize = function(buf) {
+		let dView = new DataView(buf);
+
+		return {
+			id: dView.getUint32(1),
+			sdp: bufferToString(buf.slice(5))
+		};
+	}
+
 	return {
 		register: new Serializator(0),
 		addSlaves: addSlavesSerializator,
 		removeSlaves: new Serializator(2),
+		offer: offerSerializator
 	};
 })();
 

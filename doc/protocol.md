@@ -31,9 +31,18 @@ The protocol's endianness is big-endian.
 ```
 
 ### RemoveSlaves
+Unimplemented for now. JSON is used instead.
 ```
  1B   4B
 +---+====+
 | 2 | id |
 +---+====+
+```
+
+### Offer
+```
+ 1B   4B       ?B
++---+----+-------------+
+| 2 | id | "SDP offer" |
++---+----+-------------+
 ```
