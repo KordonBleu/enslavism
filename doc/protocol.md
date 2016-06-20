@@ -14,7 +14,7 @@ The protocol's endianness is big-endian.
 
 ## Packets
 
-### Register
+### Register (slave → master)
 ```
  1B     ?B
 +---+--------+
@@ -22,7 +22,7 @@ The protocol's endianness is big-endian.
 +---+--------+
 ```
 
-### AddSlaves
+### AddSlaves (master → client)
 ```
  1B     ?B
 +---+=======+
@@ -30,7 +30,7 @@ The protocol's endianness is big-endian.
 +---+=======+
 ```
 
-### RemoveSlaves
+### RemoveSlaves (master → client)
 Unimplemented for now. JSON is used instead.
 ```
  1B   4B
@@ -39,10 +39,18 @@ Unimplemented for now. JSON is used instead.
 +---+====+
 ```
 
-### Offer
+### OfferToSlave (client → master)
 ```
- 1B   4B       ?B
-+---+----+-------------+
-| 2 | id | "SDP offer" |
-+---+----+-------------+
+ 1B      4B       ?B
++---+----------+-------------+
+| 2 | slave id | "SDP offer" |
++---+----------+-------------+
+```
+
+### OfferFromClient (master → slave)
+```
+ 1B      4B       ?B
++---+-----------+-------------+
+| 2 | client id | "SDP offer" |
++---+-----------+-------------+
 ```

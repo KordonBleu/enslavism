@@ -9,26 +9,38 @@ const webrtc = require('wrtc'),
 
 class Slave {
 	constructor(wsUrl, userData) {
-		let ws = new WebSocket(wsUrl + '/enslavism/slaves');
+		let ws = new WebSocket(wsUrl + '/enslavism/slaves'),
+			connections = [];
+
 		ws.on('open', () => {
 			ws.send(message.register.serialize(userData));
 		});
+		ws.on('message', msg => {
+			msg = msg.buffer.slice(msg.byteOffset, msg.byteOffset + msg.byteLength); // convert `Buffer` to `ArrayBuffer`
+			switch (new Uint8Array(msg)[0]) {
+				case message.offerFromClient.type:
+					console.log('got an offerFromClient');
+					this.answer(message.offerFromClient.deserialize(msg));
+					break;
+			}
+		});
 	}
 
-	stuff() {
-		var game_server = new webrtc.RTCPeerConnection();
+	answer(params) {
+		let pCon = new webrtc.RTCPeerConnection();
 
-		var desc = new webrtc.RTCSessionDescription({
+		let desc = new webrtc.RTCSessionDescription({
 			type: 'offer',
-			sdp: 'v=0\no=- 1020019771207631039 2 IN IP4 127.0.0.1\ns=-\nt=0 0\na=msid-semantic: WMS\nm=application 9 DTLS/SCTP 5000\nc=IN IP4 0.0.0.0\na=ice-ufrag:coWtKbpgwqwEsnfn\na=ice-pwd:NcUViHVijaJP1FezToNhu6eG\na=ice-options:google-ice\na=fingerprint:sha-1 D9:6E:C5:9F:00:AF:E7:E5:3C:1F:5B:99:0A:90:A0:2A:64:4F:54:5C\na=setup:actpass\na=mid:data\na=sctpmap:5000 webrtc-datachannel 1024\n'
+			sdp: params.sdp
 		});
-		console.log(desc);
 
-		game_server.setRemoteDescription(desc).then(function() {
-			var answer = game_server.createAnswer();
+		pCon.setRemoteDescription(desc).then(() => {
+			return pCon.createAnswer();
+		}).then(answer => {
 			console.log(answer);
-		}).catch(function(truc) {
-			console.log('error' + truc);
+			//TODO: respond with answer
+		}).catch(err => {
+			console.log('error: ' + err);
 		});
 	}
 }

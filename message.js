@@ -87,32 +87,37 @@ const message = (() => {
 		return slaves;
 	};
 
-	let offerSerializator = new Serializator(3);
-	offerSerializator.serialize = function(id, sdp) {
-		let sdpBuf = stringToBuffer(sdp),
-			aView = new Uint8Array(5 + sdpBuf.byteLength),
-			dView = new DataView(aView.buffer);
+	class OfferSerializator extends Serializator {
+		constructor(type) {
+			super(type);
+		}
+		serialize(id, sdp) {
+			let sdpBuf = stringToBuffer(sdp),
+				aView = new Uint8Array(5 + sdpBuf.byteLength),
+				dView = new DataView(aView.buffer);
 
-		aView[0] = this.type;
-		dView.setUint32(1, id);
-		aView.set(new Uint8Array(sdpBuf), 5);
+			aView[0] = this.type;
+			dView.setUint32(1, id);
+			aView.set(new Uint8Array(sdpBuf), 5);
 
-		return aView.buffer;
-	}
-	offerSerializator.deserialize = function(buf) {
-		let dView = new DataView(buf);
+			return aView.buffer;
+		}
+		deserialize(buf) {
+			let dView = new DataView(buf);
 
-		return {
-			id: dView.getUint32(1),
-			sdp: bufferToString(buf.slice(5))
-		};
+			return {
+				id: dView.getUint32(1),
+				sdp: bufferToString(buf.slice(5))
+			};
+		}
 	}
 
 	return {
 		register: new Serializator(0),
 		addSlaves: addSlavesSerializator,
 		removeSlaves: new Serializator(2),
-		offer: offerSerializator
+		offerToSlave: new OfferSerializator(3),
+		offerFromClient: new OfferSerializator(4)
 	};
 })();
 

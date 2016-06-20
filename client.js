@@ -31,7 +31,7 @@ let MasterConnection = (() => {
 				console.log(this);
 				let descTest = new RTCSessionDescription(offer);
 				client.setLocalDescription(descTest);
-				this.master._masterSocket.send(message.offer.serialize(this.id, offer.sdp));
+				this.master._masterSocket.send(message.offerToSlave.serialize(this.id, offer.sdp));
 			});
 		}
 	}

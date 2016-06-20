@@ -10,9 +10,6 @@ let clientSourceCode = fs.readFileSync('./client.js', 'utf8').replace('\'include
 
 class Master {
 	constructor(server) {
-		let slaveId = 0,
-			wrapMode = false;
-
 		if (typeof server === 'number') {
 			this._httpServer = http.createServer((req, res) => {
 				if (req.url === '/enslavism/client.js') {
@@ -43,21 +40,15 @@ class Master {
 		}
 
 
-		this._slavesSocket = new WebSocketServer({server: this._httpServer, path: '/enslavism/slaves'}),
+		this._slavesSocket = new WebSocketServer({server: this._httpServer, path: '/enslavism/slaves'});
+		this._slavesSocket.currentId = 0;
+		this._slavesSocket.wrapMode = false;
 		this._clientsSocket = new WebSocketServer({server: this._httpServer, path: '/enslavism/clients'});
+		this._clientsSocket.currentId = 0;
+		this._clientsSocket.wrapMode = false;
 
 		this._slavesSocket.on('connection', ws => {
-			if (slaveId > MAX_UINT32) {
-				slaveId = 0;
-				wrapMode = true;
-			}
-			if (wrapMode) {
-				if (this._slavesSocket.clients.length < MAX_UINT32) ws.close();
-				else while (slaveId <= MAX_UINT32 && this._slavesSocket.clients.find((slave) => {
-					return slave.slaveId === slaveId;
-				}) !== undefined) ++slaveId;
-			}
-			ws.slaveId = slaveId++;
+			ws.id = this.giveId(this._slavesSocket);
 
 			ws.on('message', msg => {
 				switch (new Uint8Array(msg)[0]) {
@@ -67,26 +58,54 @@ class Master {
 						this._clientsSocket.clients.forEach(client => {
 							client.send(newSlaveBuf);
 						});
+						break;
 				}
 			});
 			ws.on('close', () => {
-				let removeSlaveBuf = message.removeSlaves.serialize([ws.slaveId]);
+				let removeSlaveBuf = message.removeSlaves.serialize([ws.id]);
 				this._clientsSocket.clients.forEach(client => {
 					client.send(removeSlaveBuf);
 				});
 			});
 		});
+
 		this._clientsSocket.on('connection', ws => {
+			ws.id = this.giveId(this._clientsSocket);
+
 			console.log('client connected');
 			ws.send(message.addSlaves.serialize(this._slavesSocket.clients));
 
 			ws.on('message', msg => {
+				msg = msg.buffer.slice(msg.byteOffset, msg.byteOffset + msg.byteLength); // convert `Buffer` to `ArrayBuffer`
 				switch (new Uint8Array(msg)[0]) {
-					case message.offer.type:
-						console.log('got an offer from a client');
+					case message.offerToSlave.type:
+						console.log('got an offerToSlave from a client');
+						let {id, sdp} = message.offerToSlave.deserialize(msg),
+							receiver = this.findSlave(id);
+						if (receiver !== undefined) receiver.send(message.offerFromClient.serialize(ws.id, sdp));
+						break;
 				}
 			});
 		});
+	}
+	findSlave(id) { // get slave corresponding to this id
+		return this._slavesSocket.clients.find(slave => {
+			return slave.id === id;
+		})
+	}
+	giveId(wss) {
+		if (wss.currentId > MAX_UINT32) {
+			wss.currentId = 0;
+			wss.wrapMode = true;
+		}
+		if (wss.wrapMode) {
+			// since the maximum size of an array is 2^32 - 1
+			// that means that if the server has be able to add an object to wss.clients, there is at least an id available for it
+			while (wss.currentId <= MAX_UINT32 && wss.clients.find((client) => {
+				return client.id === wss.currentId;
+			}) !== undefined) ++wss.currentId;
+		}
+		return wss.currentId++;
 	}
 }
 
