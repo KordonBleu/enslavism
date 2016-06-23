@@ -20,25 +20,42 @@ class Slave {
 			switch (new Uint8Array(msg)[0]) {
 				case message.offerFromClient.type:
 					console.log('got an offerFromClient');
-					this.answer(message.offerFromClient.deserialize(msg));
+					this.answer(message.offerFromClient.deserialize(msg), ws);
+					break;
+				case message.iceCandidate.type:
+					let candidate = new RTCIceCandidate(message.iceCandidate.deserialize(msg));
+					this.pCon.addIceCandidate(candidate);
 					break;
 			}
 		});
 	}
 
-	answer(params) {
-		let pCon = new webrtc.RTCPeerConnection();
+	answer(params, ws) {
+		this.pCon = new webrtc.RTCPeerConnection();
+		this.pCon.onicecandidate = (candidate) => {
+			console.log(candidate.candidate);
+			ws.send(message.iceCandidate.serialize(candidate.candidate));
+		};
+		this.pCon.ondatachannel = (event) => {
+			console.log("wat is dat", event);
+			event.channel.onopen = () => {
+				console.log("data channel open I guess?");
+			};
+		};
 
 		let desc = new webrtc.RTCSessionDescription({
 			type: 'offer',
 			sdp: params.sdp
 		});
 
-		pCon.setRemoteDescription(desc).then(() => {
-			return pCon.createAnswer();
+		this.pCon.setRemoteDescription(desc).then(() => {
+			return this.pCon.createAnswer();
 		}).then(answer => {
-			console.log(answer);
-			//TODO: respond with answer
+			this.pCon.setLocalDescription(answer).then(() => {
+				ws.send(message.answerToClient.serialize(params.id, answer.sdp));
+			}).catch(err => {
+				console.log(err);
+			});
 		}).catch(err => {
 			console.log('error: ' + err);
 		});

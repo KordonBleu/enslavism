@@ -10,6 +10,9 @@ let clientSourceCode = fs.readFileSync('./client.js', 'utf8').replace('\'include
 
 class Master {
 	constructor(server) {
+		function bufferToArrayBuffer(buf) {
+			return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+		}
 		if (typeof server === 'number') {
 			this._httpServer = http.createServer((req, res) => {
 				if (req.url === '/enslavism/client.js') {
@@ -51,6 +54,8 @@ class Master {
 			ws.id = this.giveId(this._slavesSocket);
 
 			ws.on('message', msg => {
+				msg = bufferToArrayBuffer(msg);
+
 				switch (new Uint8Array(msg)[0]) {
 					case message.register.type:
 						ws.slaveUserData = message.register.deserialize(msg);
@@ -58,6 +63,12 @@ class Master {
 						this._clientsSocket.clients.forEach(client => {
 							client.send(newSlaveBuf);
 						});
+						break;
+					case message.answerToClient.type:
+						console.log('got an answer from slave');
+						let {id, sdp} = message.answerToClient.deserialize(msg),
+							receiver = this.findClient(id);
+						if (receiver !== undefined) receiver.send(message.answerFromSlave.serialize(ws.id, sdp));
 						break;
 				}
 			});
@@ -76,7 +87,8 @@ class Master {
 			ws.send(message.addSlaves.serialize(this._slavesSocket.clients));
 
 			ws.on('message', msg => {
-				msg = msg.buffer.slice(msg.byteOffset, msg.byteOffset + msg.byteLength); // convert `Buffer` to `ArrayBuffer`
+				msg = bufferToArrayBuffer(msg);
+
 				switch (new Uint8Array(msg)[0]) {
 					case message.offerToSlave.type:
 						console.log('got an offerToSlave from a client');
@@ -91,6 +103,11 @@ class Master {
 	findSlave(id) { // get slave corresponding to this id
 		return this._slavesSocket.clients.find(slave => {
 			return slave.id === id;
+		})
+	}
+	findClient(id) { // get client corresponding to this id
+		return this._clientsSocket.clients.find(client => {
+			return client.id === id;
 		})
 	}
 	giveId(wss) {

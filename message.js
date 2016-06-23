@@ -87,7 +87,7 @@ const message = (() => {
 		return slaves;
 	};
 
-	class OfferSerializator extends Serializator {
+	class SessionDescriptionSerializator extends Serializator {
 		constructor(type) {
 			super(type);
 		}
@@ -116,8 +116,11 @@ const message = (() => {
 		register: new Serializator(0),
 		addSlaves: addSlavesSerializator,
 		removeSlaves: new Serializator(2),
-		offerToSlave: new OfferSerializator(3),
-		offerFromClient: new OfferSerializator(4)
+		offerToSlave: new SessionDescriptionSerializator(3),
+		offerFromClient: new SessionDescriptionSerializator(4),
+		answerToClient: new SessionDescriptionSerializator(5),
+		answerFromSlave: new SessionDescriptionSerializator(6),
+		iceCandidate: new SessionDescriptionSerializator(7)
 	};
 })();
 

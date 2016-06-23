@@ -8,6 +8,8 @@ let MasterConnection = (() => {
 	'include message.js';//this marks where to insert the whole file message.js
 	// it works fine but as it is a hack it will be replaced by ES6 modules when they'll be available
 
+	var RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection;
+
 	class SlaveConnection {
 		constructor(id, userData, master) {
 			this.id = id;
@@ -18,21 +20,32 @@ let MasterConnection = (() => {
 			// create a connection
 			// uses the parent MasterConnection for signaling
 
-			let client = new RTCPeerConnection();
+			this._client = new RTCPeerConnection(null);
+			this._client.onicecandidate = (candidate) => {
+				console.log(candidate.candidate);
+				this.master._masterSocket.send(message.iceCandidate.serialize(candidate.candidate));
+			};
 
-			let dc = client.createDataChannel('test');
+			let dc = this._client.createDataChannel('test');
 			dc.onopen = () => {
 				console.log('Data channel open');
 			};
 			dc.onmessage = (e) => {
 				console.log(e);
 			};
-			client.createOffer().then(offer => {
+			this._client.createOffer().then(offer => {
 				console.log(this);
 				let descTest = new RTCSessionDescription(offer);
-				client.setLocalDescription(descTest);
+				this._client.setLocalDescription(descTest);
 				this.master._masterSocket.send(message.offerToSlave.serialize(this.id, offer.sdp));
 			});
+		}
+		_setRemoteDescription(sdp) {
+			console.log('remot description set');
+			this._client.setRemoteDescription(new RTCSessionDescription({
+				type: 'answer',
+				sdp
+			}));
 		}
 	}
 
@@ -55,8 +68,22 @@ let MasterConnection = (() => {
 							this._slaves.splice(rmId, 1);
 						});
 						break;
+					case message.answerFromSlave.type:
+						let {id, sdp} = message.answerFromSlave.deserialize(msg.data),
+							receiver = this.findSlave(id);
+						if (receiver !== undefined) receiver._setRemoteDescription(sdp);
+						break;
+					case message.iceCandidate.type:
+						let candidate = new RTCIceCandidate(message.iceCandidate.deserialize(msg));
+						this.pCon.addIceCandidate(candidate);
+						break;
 				}
 			});
+		}
+		findSlave(id) { // get slave corresponding to this id
+			return this._slaves.find(slave => {
+				return slave.id === id;
+			})
 		}
 		get slaves() {
 			// let's stick with one type of MasterConnection for now but
