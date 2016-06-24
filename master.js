@@ -70,6 +70,11 @@ class Master {
 							receiver = this.findClient(id);
 						if (receiver !== undefined) receiver.send(message.answerFromSlave.serialize(ws.id, sdp));
 						break;
+					case message.iceCandidateToClient.type:
+						console.log('got an ice candidate from a slave');
+						console.log(message.iceCandidateToClient.deserialize(msg));
+						break;
+
 				}
 			});
 			ws.on('close', () => {
@@ -95,6 +100,10 @@ class Master {
 						let {id, sdp} = message.offerToSlave.deserialize(msg),
 							receiver = this.findSlave(id);
 						if (receiver !== undefined) receiver.send(message.offerFromClient.serialize(ws.id, sdp));
+						break;
+					case message.iceCandidateToSlave.type:
+						console.log('got an ice candidate from a client');
+						console.log(message.iceCandidateToSlave.deserialize(msg));
 						break;
 				}
 			});

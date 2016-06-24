@@ -22,9 +22,9 @@ class Slave {
 					console.log('got an offerFromClient');
 					this.answer(message.offerFromClient.deserialize(msg), ws);
 					break;
-				case message.iceCandidate.type:
-					let candidate = new RTCIceCandidate(message.iceCandidate.deserialize(msg));
-					this.pCon.addIceCandidate(candidate);
+				case message.iceCandidateToFromClient.type:
+					let {id, sdpMid, sdpMLineIndex, candidate} = message.iceCandidateToFromClient.deserialize(msg);
+					this.pCon.addIceCandidate(new RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
 					break;
 			}
 		});
@@ -32,9 +32,8 @@ class Slave {
 
 	answer(params, ws) {
 		this.pCon = new webrtc.RTCPeerConnection();
-		this.pCon.onicecandidate = (candidate) => {
-			console.log(candidate.candidate);
-			ws.send(message.iceCandidate.serialize(candidate.candidate));
+		this.pCon.onicecandidate = (iceEv) => {
+			ws.send(message.iceCandidateToClient.serialize(666, iceEv.candidate));
 		};
 		this.pCon.ondatachannel = (event) => {
 			console.log("wat is dat", event);

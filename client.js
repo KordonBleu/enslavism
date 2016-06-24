@@ -23,7 +23,7 @@ let MasterConnection = (() => {
 			this._client = new RTCPeerConnection(null);
 			this._client.onicecandidate = (candidate) => {
 				console.log(candidate.candidate);
-				this.master._masterSocket.send(message.iceCandidate.serialize(candidate.candidate));
+				this.master._masterSocket.send(message.iceCandidateToSlave.serialize(this.id, candidate));
 			};
 
 			let dc = this._client.createDataChannel('test');
@@ -68,15 +68,17 @@ let MasterConnection = (() => {
 							this._slaves.splice(rmId, 1);
 						});
 						break;
-					case message.answerFromSlave.type:
+					case message.answerFromSlave.type: {
 						let {id, sdp} = message.answerFromSlave.deserialize(msg.data),
 							receiver = this.findSlave(id);
 						if (receiver !== undefined) receiver._setRemoteDescription(sdp);
 						break;
-					case message.iceCandidate.type:
-						let candidate = new RTCIceCandidate(message.iceCandidate.deserialize(msg));
-						this.pCon.addIceCandidate(candidate);
+					}
+					case message.iceCandidateFromSlave.type: {
+						let {id, sdpMid, sdpMLineIndex, candidate} = message.iceCandidateFromSlave.deserialize(msg.data);
+						this.pCon.addIceCandidate(new RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
 						break;
+					}
 				}
 			});
 		}

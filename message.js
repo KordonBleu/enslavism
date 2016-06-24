@@ -112,6 +112,56 @@ const message = (() => {
 		}
 	}
 
+	class IceCandidateSerializator extends Serializator {
+		constructor(type) {
+			super(type);
+		}
+		serialize(id, candidate) {//sdpMLineIndex, sdpMid, candidate) {
+			if (candidate === null) {
+				let aView = new Uint8Array(6),
+					dView = new DataView(aView.buffer);
+
+				aView[0] = this.type;
+				dView.setUint32(1, id);
+				// sdpMid length (6th byte) is set to 0 indicating a null candidate
+
+				return aView.buffer;
+			} else {
+				let sdpMidBuf = stringToBuffer(candidate.sdpMid),
+					candidateBuf = stringToBuffer(candidate.candidate),
+					aView = new Uint8Array(8 + candidateBuf.byteLength + sdpMidBuf.byteLength),
+					dView = new DataView(aView.buffer);
+
+				aView[0] = this.type;
+				dView.setUint32(1, id);
+				aView[5] = sdpMidBuf.byteLength;
+				aView.set(new Uint8Array(sdpMidBuf), 6);
+				dView.setUint16(6 + sdpMidBuf.byteLength, candidate.sdpMLineIndex);
+				aView.set(new Uint8Array(candidateBuf), 8 + sdpMidBuf.byteLength);
+
+				return aView.buffer;
+			}
+		}
+		deserialize(buf) {
+			let dView = new DataView(buf),
+				sdpMidBufLength = dView.getUint8(5);
+
+			if (sdpMidBufLength === 0) {
+				return {
+					id: dView.getUint32(1),
+					candidate: null
+				};
+			} else {
+				return {
+					id: dView.getUint32(1),
+					sdpMid: bufferToString(buf.slice(6, 6 + sdpMidBufLength)),
+					sdpMLineIndex: dView.getUint16(7 + sdpMidBufLength),
+					candidate: bufferToString(buf.slice(9 + sdpMidBufLength))
+				};
+			}
+		}
+	}
+
 	return {
 		register: new Serializator(0),
 		addSlaves: addSlavesSerializator,
@@ -120,7 +170,10 @@ const message = (() => {
 		offerFromClient: new SessionDescriptionSerializator(4),
 		answerToClient: new SessionDescriptionSerializator(5),
 		answerFromSlave: new SessionDescriptionSerializator(6),
-		iceCandidate: new SessionDescriptionSerializator(7)
+		iceCandidateToSlave: new IceCandidateSerializator(7),
+		iceCandidateToFromClient: new IceCandidateSerializator(8),
+		iceCandidateToClient: new IceCandidateSerializator(9),
+		iceCandidateFromSlave: new IceCandidateSerializator(10)
 	};
 })();
 
