@@ -7,33 +7,15 @@ const webrtc = require('wrtc'),
 	WebSocket = require('ws'),
 	message = require('./message.js');
 
-class Slave {
-	constructor(wsUrl, userData) {
-		let ws = new WebSocket(wsUrl + '/enslavism/slaves'),
-			connections = [];
+class ClientConnection {
+	constructor(id, sdp, slave) {
+		this.slave = slave;
 
-		ws.on('open', () => {
-			ws.send(message.register.serialize(userData));
-		});
-		ws.on('message', msg => {
-			msg = msg.buffer.slice(msg.byteOffset, msg.byteOffset + msg.byteLength); // convert `Buffer` to `ArrayBuffer`
-			switch (new Uint8Array(msg)[0]) {
-				case message.offerFromClient.type:
-					console.log('got an offerFromClient');
-					this.answer(message.offerFromClient.deserialize(msg), ws);
-					break;
-				case message.iceCandidateToFromClient.type:
-					let {id, sdpMid, sdpMLineIndex, candidate} = message.iceCandidateToFromClient.deserialize(msg);
-					this.pCon.addIceCandidate(new RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
-					break;
-			}
-		});
-	}
 
-	answer(params, ws) {
 		this.pCon = new webrtc.RTCPeerConnection();
 		this.pCon.onicecandidate = (iceEv) => {
-			ws.send(message.iceCandidateToClient.serialize(666, iceEv.candidate));
+			console.log('this should not be undefined', id);
+			this.slave.ws.send(message.iceCandidateToClient.serialize(id, iceEv.candidate));
 		};
 		this.pCon.ondatachannel = (event) => {
 			console.log("wat is dat", event);
@@ -44,19 +26,47 @@ class Slave {
 
 		let desc = new webrtc.RTCSessionDescription({
 			type: 'offer',
-			sdp: params.sdp
+			sdp
 		});
 
 		this.pCon.setRemoteDescription(desc).then(() => {
 			return this.pCon.createAnswer();
 		}).then(answer => {
 			this.pCon.setLocalDescription(answer).then(() => {
-				ws.send(message.answerToClient.serialize(params.id, answer.sdp));
+				this.slave.ws.send(message.answerToClient.serialize(id, answer.sdp));
 			}).catch(err => {
 				console.log(err);
 			});
 		}).catch(err => {
 			console.log('error: ' + err);
+		});
+	}
+}
+
+class Slave {
+	constructor(wsUrl, userData) {
+		this.ws = new WebSocket(wsUrl + '/enslavism/slaves');
+		this.connections = [];
+
+		this.ws.on('open', () => {
+			this.ws.send(message.register.serialize(userData));
+		});
+		this.ws.on('message', msg => {
+			msg = msg.buffer.slice(msg.byteOffset, msg.byteOffset + msg.byteLength); // convert `Buffer` to `ArrayBuffer`
+			switch (new Uint8Array(msg)[0]) {
+				case message.offerFromClient.type: {
+					console.log('got an offerFromClient');
+					let {id, sdp} = message.offerFromClient.deserialize(msg);
+					this.connections.push(new ClientConnection(id, sdp, this));
+					break;
+				}
+				case message.iceCandidateFromClient.type: {
+					console.log('got an iceCandidateFromC');
+					let {id, sdpMid, sdpMLineIndex, candidate} = message.iceCandidateFromClient.deserialize(msg);
+					this.pCon.addIceCandidate(new RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
+					break;
+				}
+			}
 		});
 	}
 }

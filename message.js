@@ -171,7 +171,7 @@ const message = (() => {
 		answerToClient: new SessionDescriptionSerializator(5),
 		answerFromSlave: new SessionDescriptionSerializator(6),
 		iceCandidateToSlave: new IceCandidateSerializator(7),
-		iceCandidateToFromClient: new IceCandidateSerializator(8),
+		iceCandidateFromClient: new IceCandidateSerializator(8),
 		iceCandidateToClient: new IceCandidateSerializator(9),
 		iceCandidateFromSlave: new IceCandidateSerializator(10)
 	};
