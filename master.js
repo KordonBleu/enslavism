@@ -66,9 +66,11 @@ class Master {
 						break;
 					case message.answerToClient.type:
 						console.log('got an answer from slave');
-						let {id, sdp} = message.answerToClient.deserialize(msg),
-							receiver = this.findClient(id);
-						if (receiver !== undefined) receiver.send(message.answerFromSlave.serialize(ws.id, sdp));
+						let receiver = this.findClient(message.answerToClient.getDestId(msg));
+						if (receiver !== undefined) {
+							message.answerFromSlave.setDestId(msg, ws.id);
+							receiver.send(msg);
+						}
 						break;
 					case message.iceCandidateToClient.type:
 						console.log('got an ice candidate from a slave');
@@ -97,9 +99,11 @@ class Master {
 				switch (new Uint8Array(msg)[0]) {
 					case message.offerToSlave.type:
 						console.log('got an offerToSlave from a client');
-						let {id, sdp} = message.offerToSlave.deserialize(msg),
-							receiver = this.findSlave(id);
-						if (receiver !== undefined) receiver.send(message.offerFromClient.serialize(ws.id, sdp));
+						let receiver = this.findSlave(message.offerFromClient.getDestId(msg));
+						if (receiver !== undefined) {
+							message.offerFromClient.setDestId(msg, ws.id);
+							receiver.send(msg);
+						}
 						break;
 					case message.iceCandidateToSlave.type:
 						console.log('got an ice candidate from a client');

@@ -75,6 +75,7 @@ let MasterConnection = (() => {
 						break;
 					}
 					case message.iceCandidateFromSlave.type: {
+						//TODO:
 						let {id, sdpMid, sdpMLineIndex, candidate} = message.iceCandidateFromSlave.deserialize(msg.data);
 						this.pCon.addIceCandidate(new RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
 						break;

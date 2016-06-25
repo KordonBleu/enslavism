@@ -87,7 +87,23 @@ const message = (() => {
 		return slaves;
 	};
 
-	class SessionDescriptionSerializator extends Serializator {
+
+	class RoutableMessageSerializator extends Serializator {
+		constructor(type) {
+			super(type);
+		}
+		setDestId(buf, newId) { // used for rerouting for example `offerToSlave` to `offerFromClient` by the master
+			let dView = new DataView(buf);
+			dView.setUint8(0, this.type);
+			dView.setUint32(1, newId);
+		}
+		getDestId(buf) {
+			let dView = new DataView(buf);
+			return dView.getUint32(1);
+		}
+	}
+
+	class SessionDescriptionSerializator extends RoutableMessageSerializator {
 		constructor(type) {
 			super(type);
 		}
@@ -112,7 +128,7 @@ const message = (() => {
 		}
 	}
 
-	class IceCandidateSerializator extends Serializator {
+	class IceCandidateSerializator extends RoutableMessageSerializator {
 		constructor(type) {
 			super(type);
 		}
