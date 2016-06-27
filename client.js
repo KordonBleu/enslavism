@@ -20,32 +20,36 @@ let MasterConnection = (() => {
 			// create a connection
 			// uses the parent MasterConnection for signaling
 
-			this._client = new RTCPeerConnection(null);
-			this._client.onicecandidate = (candidate) => {
+			this.slaveCon = new RTCPeerConnection(null);
+			this.slaveCon.onicecandidate = (candidate) => {
 				console.log(candidate.candidate);
 				this.master._masterSocket.send(message.iceCandidateToSlave.serialize(this.id, candidate));
 			};
 
-			let dc = this._client.createDataChannel('test');
+			let dc = this.slaveCon.createDataChannel('test');
 			dc.onopen = () => {
 				console.log('Data channel open');
 			};
 			dc.onmessage = (e) => {
 				console.log(e);
 			};
-			this._client.createOffer().then(offer => {
+			this.slaveCon.createOffer().then(offer => {
 				console.log(this);
 				let descTest = new RTCSessionDescription(offer);
-				this._client.setLocalDescription(descTest);
+				this.slaveCon.setLocalDescription(descTest);
 				this.master._masterSocket.send(message.offerToSlave.serialize(this.id, offer.sdp));
 			});
 		}
 		_setRemoteDescription(sdp) {
-			console.log('remot description set');
-			this._client.setRemoteDescription(new RTCSessionDescription({
+			this.slaveCon.setRemoteDescription(new RTCSessionDescription({
 				type: 'answer',
 				sdp
 			}));
+			console.log('remote description set');
+		}
+		_addIceCandidate(candidate, sdpMid, sdpMLineIndex) {
+			this.slaveCon.addIceCandidate(new RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
+			console.log('ice candidate added');
 		}
 	}
 
@@ -75,9 +79,9 @@ let MasterConnection = (() => {
 						break;
 					}
 					case message.iceCandidateFromSlave.type: {
-						//TODO:
-						let {id, sdpMid, sdpMLineIndex, candidate} = message.iceCandidateFromSlave.deserialize(msg.data);
-						this.pCon.addIceCandidate(new RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
+						let {id, sdpMid, sdpMLineIndex, candidate} = message.iceCandidateFromSlave.deserialize(msg.data),
+							receiver = this.findSlave(id);
+						if (receiver !== undefined) receiver._addIceCandidate(candidate, sdpMid, sdpMLineIndex);
 						break;
 					}
 				}

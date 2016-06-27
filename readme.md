@@ -22,4 +22,4 @@ $ node tests/master.js
 
 Now open your browser at `http://localhost:8081/`. The page you will see loads `client.js`.
 
-If you modify `client.js` or `message.js`, you have to restart the server because these files are cached by it.
+If you modify `client.js` or `message.js`, you have to restart the server because these files are cached by it, unless you set `$NODE_ENV` to `development`.

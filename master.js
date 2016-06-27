@@ -6,17 +6,35 @@ const http = require('http'),
 	message = require('./message.js'),
 	MAX_UINT32 = Math.pow(2, 32) - 1;
 
-let clientSourceCode = fs.readFileSync('./client.js', 'utf8').replace('\'include message.js\';', fs.readFileSync('./message.js', 'utf8'));
+function generateClientSource() {
+	return fs.readFileSync('./client.js', 'utf8').replace('\'include message.js\';', fs.readFileSync('./message.js', 'utf8'));
+}
+function getLastChange() {
+	return Math.max(fs.statSync('./client.js').mtime.getTime(), fs.statSync('./client.js').mtime.getTime());
+}
+let clientSourceCode = generateClientSource(),
+	clientLastChange = getLastChange();
 
 class Master {
 	constructor(server) {
 		function bufferToArrayBuffer(buf) {
 			return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
 		}
+		function checkClientSourceUpdate() {
+			if (process.env.NODE_ENV === 'development') {
+				let lastChange = getLastChange();
+				if (lastChange > clientLastChange) {
+					clientLastChange = lastChange;
+					clientSourceCode = generateClientSource();
+					console.log('regenerate');
+				}
+			}
+		}
 		if (typeof server === 'number') {
 			this._httpServer = http.createServer((req, res) => {
 				if (req.url === '/enslavism/client.js') {
 					res.writeHead(200, {'Content-Type': 'application/javascript'});
+					checkClientSourceUpdate();
 					res.end(clientSourceCode);
 				} else {
 					res.writeHead(404);
@@ -31,6 +49,7 @@ class Master {
 			server.on('request', (req, res) => {
 				if (req.url === '/enslavism/client.js') {
 					res.writeHead(200, {'Content-Type': 'application/javascript'});
+					checkClientSourceUpdate();
 					res.end(clientSourceCode);
 				} else {
 					userDefReqListeners.forEach(listener => {
