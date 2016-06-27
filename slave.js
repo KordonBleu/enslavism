@@ -10,14 +10,15 @@ const webrtc = require('wrtc'),
 class ClientConnection {
 	constructor(id, sdp, slave) {
 		this.slave = slave;
+		this.id = id;
 
 
-		this.pCon = new webrtc.RTCPeerConnection();
-		this.pCon.onicecandidate = (iceEv) => {
-			console.log('this should not be undefined', id);
+		this.clientCon = new webrtc.RTCPeerConnection();
+		this.clientCon.onicecandidate = (iceEv) => {
+			if (!iceEv.candidate) return;
 			this.slave.ws.send(message.iceCandidateToClient.serialize(id, iceEv.candidate));
 		};
-		this.pCon.ondatachannel = (event) => {
+		this.clientCon.ondatachannel = (event) => {
 			console.log("wat is dat", event);
 			event.channel.onopen = () => {
 				console.log("data channel open I guess?");
@@ -29,10 +30,10 @@ class ClientConnection {
 			sdp
 		});
 
-		this.pCon.setRemoteDescription(desc).then(() => {
-			return this.pCon.createAnswer();
+		this.clientCon.setRemoteDescription(desc).then(() => {
+			return this.clientCon.createAnswer();
 		}).then(answer => {
-			this.pCon.setLocalDescription(answer).then(() => {
+			this.clientCon.setLocalDescription(answer).then(() => {
 				this.slave.ws.send(message.answerToClient.serialize(id, answer.sdp));
 			}).catch(err => {
 				console.log(err);
@@ -63,11 +64,19 @@ class Slave {
 				case message.iceCandidateFromClient.type: {
 					console.log('got an iceCandidateFromC');
 					let {id, sdpMid, sdpMLineIndex, candidate} = message.iceCandidateFromClient.deserialize(msg);
-					this.pCon.addIceCandidate(new RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
+					let receiver = this.findClient(id);
+					if (receiver !== undefined) {
+						receiver.clientCon.addIceCandidate(new webrtc.RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
+					}
 					break;
 				}
 			}
 		});
+	}
+	findClient(id) { // get client corresponding to this id
+			return this.connections.find(client => {
+				return client.id === id;
+			})
 	}
 }
 module.exports = Slave;

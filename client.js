@@ -22,7 +22,7 @@ let MasterConnection = (() => {
 
 			this.slaveCon = new RTCPeerConnection(null);
 			this.slaveCon.onicecandidate = (candidate) => {
-				console.log(candidate.candidate);
+				if(!candidate.candidate) return;
 				this.master._masterSocket.send(message.iceCandidateToSlave.serialize(this.id, candidate));
 			};
 
@@ -34,7 +34,6 @@ let MasterConnection = (() => {
 				console.log(e);
 			};
 			this.slaveCon.createOffer().then(offer => {
-				console.log(this);
 				let descTest = new RTCSessionDescription(offer);
 				this.slaveCon.setLocalDescription(descTest);
 				this.master._masterSocket.send(message.offerToSlave.serialize(this.id, offer.sdp));
@@ -48,7 +47,7 @@ let MasterConnection = (() => {
 			console.log('remote description set');
 		}
 		_addIceCandidate(candidate, sdpMid, sdpMLineIndex) {
-			this.slaveCon.addIceCandidate(new RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
+			this.slaveCon.addIceCandidate(new RTCIceCandidate({candidate, sdpMid, sdpMLineIndex}));
 			console.log('ice candidate added');
 		}
 	}

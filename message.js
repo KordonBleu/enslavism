@@ -24,8 +24,6 @@ const message = (() => {
 		}
 	}
 
-	// the protocol is binary BUT is JSON-based
-	// however the user will free to override it at some point
 	class Serializator {
 		constructor(type) {
 			this.type = type;
@@ -132,7 +130,7 @@ const message = (() => {
 		constructor(type) {
 			super(type);
 		}
-		serialize(id, candidate) {//sdpMLineIndex, sdpMid, candidate) {
+		serialize(id, candidate) {
 			if (candidate === null) {
 				let aView = new Uint8Array(6),
 					dView = new DataView(aView.buffer);
@@ -171,8 +169,8 @@ const message = (() => {
 				return {
 					id: dView.getUint32(1),
 					sdpMid: bufferToString(buf.slice(6, 6 + sdpMidBufLength)),
-					sdpMLineIndex: dView.getUint16(7 + sdpMidBufLength),
-					candidate: bufferToString(buf.slice(9 + sdpMidBufLength))
+					sdpMLineIndex: dView.getUint16(6 + sdpMidBufLength),
+					candidate: bufferToString(buf.slice(8 + sdpMidBufLength))
 				};
 			}
 		}

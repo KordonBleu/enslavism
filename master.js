@@ -76,14 +76,15 @@ class Master {
 				msg = bufferToArrayBuffer(msg);
 
 				switch (new Uint8Array(msg)[0]) {
-					case message.register.type:
+					case message.register.type: {
 						ws.slaveUserData = message.register.deserialize(msg);
 						let newSlaveBuf = message.addSlaves.serialize([ws]);
 						this._clientsSocket.clients.forEach(client => {
 							client.send(newSlaveBuf);
 						});
 						break;
-					case message.answerToClient.type:
+					}
+					case message.answerToClient.type: {
 						console.log('got an answer from slave');
 						let receiver = this.findClient(message.answerToClient.getDestId(msg));
 						if (receiver !== undefined) {
@@ -91,10 +92,17 @@ class Master {
 							receiver.send(msg);
 						}
 						break;
-					case message.iceCandidateToClient.type:
+					}
+					case message.iceCandidateToClient.type: {
 						console.log('got an ice candidate from a slave');
 						console.log(message.iceCandidateToClient.deserialize(msg));
+						let receiver = this.findClient(message.iceCandidateToClient.getDestId(msg));
+						if (receiver !== undefined) {
+							message.iceCandidateFromSlave.setDestId(msg, ws.id);
+							receiver.send(msg);
+						}
 						break;
+					}
 
 				}
 			});
@@ -116,7 +124,7 @@ class Master {
 				msg = bufferToArrayBuffer(msg);
 
 				switch (new Uint8Array(msg)[0]) {
-					case message.offerToSlave.type:
+					case message.offerToSlave.type: {
 						console.log('got an offerToSlave from a client');
 						let receiver = this.findSlave(message.offerFromClient.getDestId(msg));
 						if (receiver !== undefined) {
@@ -124,10 +132,17 @@ class Master {
 							receiver.send(msg);
 						}
 						break;
-					case message.iceCandidateToSlave.type:
+					}
+					case message.iceCandidateToSlave.type: {
 						console.log('got an ice candidate from a client');
 						console.log(message.iceCandidateToSlave.deserialize(msg));
+						let receiver = this.findSlave(message.iceCandidateToSlave.getDestId(msg));
+						if (receiver !== undefined) {
+							message.iceCandidateFromClient.setDestId(msg, ws.id);
+							receiver.send(msg);
+						}
 						break;
+					}
 				}
 			});
 		});
