@@ -3,26 +3,26 @@
 /* this file must accept connections from clients
    and expose an API use to exchange messages with clients */
 
-const webrtc = require('wrtc'),
+const EventEmitter = require('events'),
+	webrtc = require('wrtc'),
 	WebSocket = require('ws'),
 	message = require('./message.js');
 
-class ClientConnection {
+class ClientConnection extends EventEmitter {
 	constructor(id, sdp, slave) {
+		super();
+
 		this.slave = slave;
 		this.id = id;
-
+		this.dataChannels = {};
 
 		this.clientCon = new webrtc.RTCPeerConnection();
 		this.clientCon.onicecandidate = (iceEv) => {
 			if (!iceEv.candidate) return;
 			this.slave.ws.send(message.iceCandidateToClient.serialize(id, iceEv.candidate));
 		};
-		this.clientCon.ondatachannel = (event) => {
-			console.log("wat is dat", event);
-			event.channel.onopen = () => {
-				console.log("data channel open I guess?");
-			};
+		this.clientCon.ondatachannel = ev => {
+			this.emit('newdc', ev.channel);
 		};
 
 		let desc = new webrtc.RTCSessionDescription({
@@ -44,8 +44,10 @@ class ClientConnection {
 	}
 }
 
-class Slave {
+class Slave extends EventEmitter {
 	constructor(wsUrl, userData) {
+		super();
+
 		this.ws = new WebSocket(wsUrl + '/enslavism/slaves');
 		this.connections = [];
 
@@ -57,16 +59,25 @@ class Slave {
 			switch (new Uint8Array(msg)[0]) {
 				case message.offerFromClient.type: {
 					console.log('got an offerFromClient');
-					let {id, sdp} = message.offerFromClient.deserialize(msg);
-					this.connections.push(new ClientConnection(id, sdp, this));
+					let {id, sdp} = message.offerFromClient.deserialize(msg),
+						clCo = new ClientConnection(id, sdp, this);
+					this.connections.push(clCo);
+					this.emit('newclco', clCo);
 					break;
 				}
 				case message.iceCandidateFromClient.type: {
 					console.log('got an iceCandidateFromC');
 					let {id, sdpMid, sdpMLineIndex, candidate} = message.iceCandidateFromClient.deserialize(msg);
+					console.log(sdpMid, sdpMLineIndex, candidate);
 					let receiver = this.findClient(id);
 					if (receiver !== undefined) {
-						receiver.clientCon.addIceCandidate(new webrtc.RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
+						receiver.clientCon.addIceCandidate(new webrtc.RTCIceCandidate(candidate, sdpMid, sdpMLineIndex))
+						.then(() => {
+							console.log('adding ICE candidate: succes');
+						})
+						.catch(e => {
+							console.log('adding ICE candidate: failure', e, id, sdpMid, sdpMLineIndex, candidate);
+						});
 					}
 					break;
 				}
@@ -74,9 +85,9 @@ class Slave {
 		});
 	}
 	findClient(id) { // get client corresponding to this id
-			return this.connections.find(client => {
-				return client.id === id;
-			})
+		return this.connections.find(client => {
+			return client.id === id;
+		});
 	}
 }
 module.exports = Slave;

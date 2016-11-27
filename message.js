@@ -67,7 +67,7 @@ const message = (() => {
 		});
 
 		return aView.buffer;
-	}
+	};
 	addSlavesSerializator.deserialize = function(buf) {
 		let slaves = [],
 			offset = 1,

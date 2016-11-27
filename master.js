@@ -70,6 +70,7 @@ class Master {
 		this._clientsSocket.wrapMode = false;
 
 		this._slavesSocket.on('connection', ws => {
+			console.log('new slave');
 			ws.id = this.giveId(this._slavesSocket);
 
 			ws.on('message', msg => {
@@ -150,12 +151,12 @@ class Master {
 	findSlave(id) { // get slave corresponding to this id
 		return this._slavesSocket.clients.find(slave => {
 			return slave.id === id;
-		})
+		});
 	}
 	findClient(id) { // get client corresponding to this id
 		return this._clientsSocket.clients.find(client => {
 			return client.id === id;
-		})
+		});
 	}
 	giveId(wss) {
 		if (wss.currentId > MAX_UINT32) {

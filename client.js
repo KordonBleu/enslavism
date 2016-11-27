@@ -15,28 +15,37 @@ let MasterConnection = (() => {
 			this.id = id;
 			this.userData = userData;
 			this.master = master;
+			this.dataChannels = {};
 		}
 		connect() {
 			// create a connection
 			// uses the parent MasterConnection for signaling
 
 			this.slaveCon = new RTCPeerConnection(null);
-			this.slaveCon.onicecandidate = (candidate) => {
+			this.slaveCon.addEventListener('icecandidate', candidate => {
 				if(!candidate.candidate) return;
 				this.master._masterSocket.send(message.iceCandidateToSlave.serialize(this.id, candidate));
-			};
+			});
+		}
+		createDataChannel(dcName) {
+			return new Promise((resolve, reject) => {
+				let dc;
+				try {
+					dc = this.slaveCon.createDataChannel(dcName);
+				} catch(err) {
+					reject(err);
+				}
 
-			let dc = this.slaveCon.createDataChannel('test');
-			dc.onopen = () => {
-				console.log('Data channel open');
-			};
-			dc.onmessage = (e) => {
-				console.log(e);
-			};
-			this.slaveCon.createOffer().then(offer => {
-				let descTest = new RTCSessionDescription(offer);
-				this.slaveCon.setLocalDescription(descTest);
-				this.master._masterSocket.send(message.offerToSlave.serialize(this.id, offer.sdp));
+				dc.addEventListener('open', () => {
+					this.dataChannels[dcName] = dc;
+					console.log('Data channel open');
+					resolve(dc);
+				});
+				this.slaveCon.createOffer().then(offer => {
+					let descTest = new RTCSessionDescription(offer);
+					this.slaveCon.setLocalDescription(descTest);
+					this.master._masterSocket.send(message.offerToSlave.serialize(this.id, offer.sdp));
+				});
 			});
 		}
 		_setRemoteDescription(sdp) {
@@ -62,7 +71,10 @@ let MasterConnection = (() => {
 					case message.addSlaves.type:
 						console.log('got addServers');
 						message.addSlaves.deserialize(msg.data).forEach(slave => {
-							this._slaves.push(new SlaveConnection(slave.id, slave.userData, this));
+							console.log(slave, msg.data);
+							let slaveCo = new SlaveConnection(slave.id, slave.userData, this);
+							this._slaves.push(slaveCo);
+							if (this.onSlave !== undefined) this.onSlave(slaveCo);
 						});
 						break;
 					case message.removeSlaves.type:
@@ -89,7 +101,7 @@ let MasterConnection = (() => {
 		findSlave(id) { // get slave corresponding to this id
 			return this._slaves.find(slave => {
 				return slave.id === id;
-			})
+			});
 		}
 		get slaves() {
 			// let's stick with one type of MasterConnection for now but
