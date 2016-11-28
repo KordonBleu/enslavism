@@ -42,48 +42,52 @@ const message = (() => {
 		}
 	}
 
-	let addSlavesSerializator = new Serializator(1);
-	addSlavesSerializator.serialize = function(slaves) { // fat arrow functions do not bind `this` to  `addSlavesSerializator`
-		let userDataBufs = [],
-			userDataBufsLength = 0;
-
-		slaves.forEach(slave => {
-			let buf = stringToBuffer(JSON.stringify(slave.slaveUserData));
-			userDataBufsLength += buf.byteLength;
-			userDataBufs.push(buf);
-		});
-
-		let aView = new Uint8Array(1 + userDataBufsLength + userDataBufs.length*6),
-			dView = new DataView(aView.buffer),
-			offset = 1;
-
-		dView.setUint8(0, this.type);
-		userDataBufs.forEach((userDataBuf, i) => {
-			dView.setUint32(offset, slaves[i].slaveId);
-			dView.setUint16(offset + 4, userDataBuf.byteLength);
-			aView.set(new Uint8Array(userDataBuf), offset + 6);
-
-			offset += 6 + userDataBuf.length;
-		});
-
-		return aView.buffer;
-	};
-	addSlavesSerializator.deserialize = function(buf) {
-		let slaves = [],
-			offset = 1,
-			dView = new DataView(buf);
-
-		while (offset !== buf.byteLength) {
-			let userDataLength = dView.getUint16(offset + 4);
-			slaves.push({
-				id: dView.getUint32(offset),
-				userData: JSON.parse(bufferToString(buf.slice(offset + 6, offset + 6 + userDataLength)))
-			});
-			offset += 6 + userDataLength;
+	class AddSlavesSerializator extends Serializator {
+		constructor(type) {
+			super(type);
 		}
+		serialize(slaves) {
+			let userDataBufs = [],
+				userDataBufsLength = 0;
 
-		return slaves;
-	};
+			for (let slave of slaves) {
+				let buf = stringToBuffer(JSON.stringify(slave.userData));
+				userDataBufsLength += buf.byteLength;
+				userDataBufs.push(buf);
+			}
+
+			let aView = new Uint8Array(1 + userDataBufsLength + userDataBufs.length*6),
+				dView = new DataView(aView.buffer),
+				offset = 1;
+
+			dView.setUint8(0, this.type);
+			for (let [i, userDataBuf] of userDataBufs.entries()) {
+				dView.setUint32(offset, slaves[i].id);
+				dView.setUint16(offset + 4, userDataBuf.byteLength);
+				aView.set(new Uint8Array(userDataBuf), offset + 6);
+
+				offset += 6 + userDataBuf.byteLength;
+			}
+
+			return aView.buffer;
+		}
+		deserialize(buf) {
+			let slaves = [],
+				offset = 1,
+				dView = new DataView(buf);
+
+			while (offset !== buf.byteLength) {
+				let userDataLength = dView.getUint16(offset + 4);
+				slaves.push({
+					id: dView.getUint32(offset),
+					userData: JSON.parse(bufferToString(buf.slice(offset + 6, offset + 6 + userDataLength)))
+				});
+				offset += 6 + userDataLength;
+			}
+
+			return slaves;
+		}
+	}
 
 
 	class RoutableMessageSerializator extends Serializator {
@@ -178,7 +182,7 @@ const message = (() => {
 
 	return {
 		register: new Serializator(0),
-		addSlaves: addSlavesSerializator,
+		addSlaves: new AddSlavesSerializator(1),
 		removeSlaves: new Serializator(2),
 		offerToSlave: new SessionDescriptionSerializator(3),
 		offerFromClient: new SessionDescriptionSerializator(4),

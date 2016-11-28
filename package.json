@@ -28,5 +28,11 @@
   "optionalDependencies": {
     "bufferutil": "1.x",
     "utf-8-validate": "1.x"
+  },
+  "devDependencies": {
+    "ava": "0.x"
+  },
+  "scripts": {
+    "test": "node_modules/ava/cli.js tests/"
   }
 }

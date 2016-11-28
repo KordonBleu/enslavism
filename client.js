@@ -70,18 +70,18 @@ let MasterConnection = (() => {
 				switch (new Uint8Array(msg.data)[0]) {
 					case message.addSlaves.type:
 						console.log('got addServers');
-						message.addSlaves.deserialize(msg.data).forEach(slave => {
+						for (let slave of message.addSlaves.deserialize(msg.data)) {
 							console.log(slave, msg.data);
 							let slaveCo = new SlaveConnection(slave.id, slave.userData, this);
 							this._slaves.push(slaveCo);
 							if (this.onSlave !== undefined) this.onSlave(slaveCo);
-						});
+						}
 						break;
 					case message.removeSlaves.type:
 						console.log('got removeServers');
-						message.removeSlaves.deserialize(msg.data).forEach((rmId) => {
+						for (let rmId of message.removeSlaves.deserialize(msg.data)) {
 							this._slaves.splice(rmId, 1);
-						});
+						}
 						break;
 					case message.answerFromSlave.type: {
 						let {id, sdp} = message.answerFromSlave.deserialize(msg.data),

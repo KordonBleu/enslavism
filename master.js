@@ -52,9 +52,9 @@ class Master {
 					checkClientSourceUpdate();
 					res.end(clientSourceCode);
 				} else {
-					userDefReqListeners.forEach(listener => {
+					for (let listener of userDefReqListeners) {
 						listener.call(server, req, res);
-					});
+					}
 				}
 			});
 
@@ -78,11 +78,11 @@ class Master {
 
 				switch (new Uint8Array(msg)[0]) {
 					case message.register.type: {
-						ws.slaveUserData = message.register.deserialize(msg);
+						ws.userData = message.register.deserialize(msg);
 						let newSlaveBuf = message.addSlaves.serialize([ws]);
-						this._clientsSocket.clients.forEach(client => {
+						for (let client of this._clientsSocket.clients) {
 							client.send(newSlaveBuf);
-						});
+						}
 						break;
 					}
 					case message.answerToClient.type: {
@@ -109,9 +109,9 @@ class Master {
 			});
 			ws.on('close', () => {
 				let removeSlaveBuf = message.removeSlaves.serialize([ws.id]);
-				this._clientsSocket.clients.forEach(client => {
+				for (let client of this._clientsSocket.clients) {
 					client.send(removeSlaveBuf);
-				});
+				}
 			});
 		});
 
