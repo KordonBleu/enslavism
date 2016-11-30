@@ -33,9 +33,11 @@
     "utf-8-validate": "1.x"
   },
   "devDependencies": {
-    "ava": "0.x"
+    "ava": "0.x",
+    "rollup-plugin-eslint": "3.x"
   },
   "scripts": {
-    "test": "node_modules/ava/cli.js tests/"
+    "test": "node_modules/ava/cli.js tests/",
+    "prepublish": "node bundler.js"
   }
 }

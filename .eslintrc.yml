@@ -20,3 +20,5 @@ rules:
     - always
   no-trailing-spaces: "error"
   no-console: 0
+parserOptions:
+  sourceType: "module"

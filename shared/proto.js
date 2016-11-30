@@ -166,4 +166,4 @@ export let register = new Serializator(0),
 	iceCandidateToSlave = new IceCandidateSerializator(7),
 	iceCandidateFromClient = new IceCandidateSerializator(8),
 	iceCandidateToClient = new IceCandidateSerializator(9),
-	iceCandidateFromSlave = new IceCandidateSerializator(10)
+	iceCandidateFromSlave = new IceCandidateSerializator(10);

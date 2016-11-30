@@ -1,29 +1,37 @@
 import * as message from '../shared/proto.js';
 
 const http = require('http'),
-	fs = require('fs'),
 	WebSocketServer = require('ws').Server,
 	rollup = require('rollup'),
 	alias = require('rollup-plugin-alias'),
 	MAX_UINT32 = Math.pow(2, 32) - 1;
 
+let clientSource = null;
 function generateClientSource() {
-	return new Promise((resolve, reject) => {
-		rollup.rollup({
-			entry: 'client/client.js',
-			plugins: [
-				alias({
-					'<@convert@>': './../client/convert.js'
-				})
-			]
-		}).then(bundle => {
-			console.log('bundle generated');
-			resolve(bundle.generate({
-				format: 'iife',
-				moduleName: 'MasterConnection'
-			}));
-		}).catch(reject);
-	});
+	if (clientSource !== null && process.env.NODE_ENV === 'production') return Promise.resolve(clientSource);
+	else {
+		let plugins = [
+			alias({
+				'<@convert@>': './../client/convert.js'
+			})
+		];
+		if (process.env.NODE_ENV !== 'production') {
+			const eslint = require('rollup-plugin-eslint');
+			plugins.push(eslint());
+		}
+		return new Promise((resolve, reject) => {
+			rollup.rollup({
+				entry: 'client/client.js',
+				plugins
+			}).then(bundle => {
+				clientSource = bundle.generate({
+					format: 'iife',
+					moduleName: 'MasterConnection'
+				});
+				resolve(clientSource);
+			}).catch(reject);
+		});
+	}
 }
 
 export default class Master {
