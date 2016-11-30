@@ -4,38 +4,35 @@ const http = require('http'),
 	fs = require('fs'),
 	WebSocketServer = require('ws').Server,
 	message = require('./message.js'),
+	rollup = require('rollup'),
 	MAX_UINT32 = Math.pow(2, 32) - 1;
 
 function generateClientSource() {
-	return fs.readFileSync('./client.js', 'utf8').replace('\'include message.js\';', fs.readFileSync('./message.js', 'utf8'));
+	return new Promise((resolve, reject) => {
+		rollup.rollup({
+			entry: 'client.js'
+		}).then(bundle => {
+			console.log('bundle generated');
+			resolve(bundle.generate({
+				format: 'iife',
+				moduleName: 'MasterConnection'
+			}));
+		}).catch(reject);
+	});
 }
-function getLastChange() {
-	return Math.max(fs.statSync('./client.js').mtime.getTime(), fs.statSync('./client.js').mtime.getTime());
-}
-let clientSourceCode = generateClientSource(),
-	clientLastChange = getLastChange();
 
 class Master {
 	constructor(server) {
 		function bufferToArrayBuffer(buf) {
 			return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
 		}
-		function checkClientSourceUpdate() {
-			if (process.env.NODE_ENV === 'development') {
-				let lastChange = getLastChange();
-				if (lastChange > clientLastChange) {
-					clientLastChange = lastChange;
-					clientSourceCode = generateClientSource();
-					console.log('regenerate');
-				}
-			}
-		}
 		if (typeof server === 'number') {
 			this._httpServer = http.createServer((req, res) => {
 				if (req.url === '/enslavism/client.js') {
 					res.writeHead(200, {'Content-Type': 'application/javascript'});
-					checkClientSourceUpdate();
-					res.end(clientSourceCode);
+					generateClientSource().then(source => {
+						res.end(source.code);
+					});
 				} else {
 					res.writeHead(404);
 					res.end('404\nNot found');
@@ -49,8 +46,9 @@ class Master {
 			server.on('request', (req, res) => {
 				if (req.url === '/enslavism/client.js') {
 					res.writeHead(200, {'Content-Type': 'application/javascript'});
-					checkClientSourceUpdate();
-					res.end(clientSourceCode);
+					generateClientSource().then(source => {
+						res.end(source.code);
+					});
 				} else {
 					for (let listener of userDefReqListeners) {
 						listener.call(server, req, res);

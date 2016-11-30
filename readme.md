@@ -1,23 +1,45 @@
 # Enslavism
 
-A framework to connect browser clients to WebRTC peer servers with the help of a master server.
+A framework to manage distributed WebRTC servers that communicate with browser clients.
 
-It has been created to be used by [JumpSuit](https://github.com/KordonBleu/jumpsuit).
-The goal is to implement a framework to deal with a master server architecture such as JumpSuit's, but with WebRTC's DataChannels instead of WebSockets. It is also to make it reusable.
+It has been created to be used by [JumpSuit](https://github.com/KordonBleu/jumpsuit). It is generally great for web-based games, but I am sure you will find other uses.
 
-It is yet very WIP.
+Basically, you have:
 
-## Uses
- * transmiting encrypted data without having to register a SSL certificate (unlike secure WebSockets)
- * configurable reliability (unreliable is fast!)
- * configurable delivery ordering (unordered is fast!)
- * an architecture that allows browser clients to choose which independent server to connect to (usefull for games)
+* **a** master server (Node.js)
+    * knows all slaves and all clients
+    * synchronises the slave list across all clients
+* slaves (Node.js)
+    * where you handle the business logic of your application (ex: game server)
+    * you may accept WebRTC connections from clients
+* clients (browser)
+    * you may request a WebRTC connection to a slave in the slave list
 
-## Developpement setup
+
+## The point
+
+* transmiting encrypted data without having to register a SSL certificate (unlike secure WebSockets)
+* configurable reliability (unreliable is fast!)
+* configurable delivery ordering (unordered is fast!)
+* an architecture that allows browser clients to choose which independent server to connect to (useful for games)
+
+## API
+
+### Master
+
+*To be written.*
+
+### Slave
+
+*To be written.*
+
+
+## Try the example!
 
 ```sh
 $ npm install
-$ node tests/master.js
+$ node example/master.js
+$ node example/slave.js # in a different terminal
 ```
 
 Now open your browser at `http://localhost:8081/`. The page you will see loads `client.js`.
