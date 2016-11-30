@@ -1,50 +1,11 @@
-'use strict';
-
-/* this file must accept connections from clients
-   and expose an API use to exchange messages with clients */
+import * as message from '../shared/proto.js';
+import ClientConnection from './client_connection.js';
 
 const EventEmitter = require('events'),
 	webrtc = require('wrtc'),
-	WebSocket = require('ws'),
-	message = require('./message.js');
+	WebSocket = require('ws');
 
-class ClientConnection extends EventEmitter {
-	constructor(id, sdp, slave) {
-		super();
-
-		this.slave = slave;
-		this.id = id;
-		this.dataChannels = {};
-
-		this.clientCon = new webrtc.RTCPeerConnection();
-		this.clientCon.onicecandidate = (iceEv) => {
-			if (!iceEv.candidate) return;
-			this.slave.ws.send(message.iceCandidateToClient.serialize(id, iceEv.candidate));
-		};
-		this.clientCon.ondatachannel = ev => {
-			this.emit('newdc', ev.channel);
-		};
-
-		let desc = new webrtc.RTCSessionDescription({
-			type: 'offer',
-			sdp
-		});
-
-		this.clientCon.setRemoteDescription(desc).then(() => {
-			return this.clientCon.createAnswer();
-		}).then(answer => {
-			this.clientCon.setLocalDescription(answer).then(() => {
-				this.slave.ws.send(message.answerToClient.serialize(id, answer.sdp));
-			}).catch(err => {
-				console.log(err);
-			});
-		}).catch(err => {
-			console.log('error: ' + err);
-		});
-	}
-}
-
-class Slave extends EventEmitter {
+export default class Slave extends EventEmitter {
 	constructor(wsUrl, userData) {
 		super();
 
@@ -90,4 +51,3 @@ class Slave extends EventEmitter {
 		});
 	}
 }
-module.exports = Slave;

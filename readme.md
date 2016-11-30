@@ -38,6 +38,7 @@ Basically, you have:
 
 ```sh
 $ npm install
+$ node bundler.js # generate Enslavism
 $ node example/master.js
 $ node example/slave.js # in a different terminal
 ```

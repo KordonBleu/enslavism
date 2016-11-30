@@ -2,7 +2,7 @@ const rollup = require('rollup'),
 	alias = require('rollup-plugin-alias');
 
 rollup.rollup({
-	entry: 'server/master.js',
+	entry: 'server/index.js',
 	plugins: [
 		alias({
 			'<@convert@>': 'server/convert.js'
@@ -12,6 +12,6 @@ rollup.rollup({
 	console.log('bundle generated');
 	bundle.write({
 		format: 'cjs',
-		dest: 'master_bundle.js'
+		dest: 'bundle.js'
 	});
 });
