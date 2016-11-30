@@ -1,5 +1,4 @@
-import * as message from './proto.js';
-
+import * as message from '../shared/proto.js';
 
 var RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection;
 

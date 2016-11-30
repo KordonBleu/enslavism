@@ -1,4 +1,4 @@
-import * as convert from './convert.js';
+import * as convert from '<@convert@>';
 
 class Serializator {
 	constructor(type) {

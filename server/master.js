@@ -1,16 +1,21 @@
-'use strict';
+import * as message from '../shared/proto.js';
 
 const http = require('http'),
 	fs = require('fs'),
 	WebSocketServer = require('ws').Server,
-	message = require('./message.js'),
 	rollup = require('rollup'),
+	alias = require('rollup-plugin-alias'),
 	MAX_UINT32 = Math.pow(2, 32) - 1;
 
 function generateClientSource() {
 	return new Promise((resolve, reject) => {
 		rollup.rollup({
-			entry: 'client.js'
+			entry: 'client/client.js',
+			plugins: [
+				alias({
+					'<@convert@>': './../client/convert.js'
+				})
+			]
 		}).then(bundle => {
 			console.log('bundle generated');
 			resolve(bundle.generate({
@@ -21,7 +26,7 @@ function generateClientSource() {
 	});
 }
 
-class Master {
+export default class Master {
 	constructor(server) {
 		function bufferToArrayBuffer(buf) {
 			return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
@@ -171,5 +176,3 @@ class Master {
 		return wss.currentId++;
 	}
 }
-
-module.exports = Master;
