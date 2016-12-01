@@ -25,6 +25,8 @@ Basically, you have:
 
 ## API
 
+It is recommended that you also take a look at the [examples](#example).
+
 ## Client
 
 You need to include `/enslavism/client.js` in your HTML document like so:
@@ -35,25 +37,51 @@ You need to include `/enslavism/client.js` in your HTML document like so:
 
 Then you can create a connection to a master server:
 
+### Class: MasterConnection
+
+#### new MasterConnection(masterWsUrl)
+
 ```JavaScript
 let masterCon = new MasterConnection('ws://localhost:8081');
 ```
 
+#### masterConnection.slaves
+
+An array of received slaves.
+
+#### Event: 'slave'
+
+* `slaveCo`: SlaveConnection
+
+Triggered when a new slave is received.
+
 ```JavaScript
-masterCon.onSlave = slave => { // triggered when a new slave is received
-	console.log('new slave', slave);
-	slave.connect(); // it is possible to connect to a slave
-	slave.createDataChannel('test') // do NOT creat datachannels if not connected!
-	.then(dc => {
-		dc.addEventListener('message', msg => {
-			console.log(msg);
-		});
-		dc.send('What have I wrought!');
-	});
-};
+masterCon.addEventListener('slave', slaveCo => { // triggered when a new slave is received
+	console.log('new slave', slaveCo);
+});
 ```
 
-### Master
+### Class: SlaveConnection
+
+#### slaveConnection.connect()
+
+Connect to a slave.
+
+#### slaveConnection.createDataChannel(dataChannelName)
+
+Create a new data channel. Returns a Promise that resolves with the data channel.
+**Fails if the slave is not connected.**
+
+```JavaScript
+slaveCo.createDataChannel('test').then(dc => {
+	dc.addEventListener('message', msg => {
+		console.log(msg);
+	});
+	dc.send('What have I wrought!');
+});
+```
+
+## Master
 
 You can create a master, specifying on which port you want it to run:
 
@@ -77,9 +105,9 @@ myServer.listen(8081);
 let myMaster = new Master(myServer);
 ```
 
-### Slave
+## Slave
 
-#### Creation
+### Creation
 
 ```JavaScript
 let slave = new enslavism.Slave('ws://localhost:8081', { // address of the master
@@ -88,9 +116,9 @@ let slave = new enslavism.Slave('ws://localhost:8081', { // address of the maste
 });
 ```
 
-#### Events
+### Events
 
-```
+```JavaScript
 slave.on('newclco', clCo => { // triggered each time a client connects
 	clCo.on('newdc', dc => { // triggered each time a client creates a datachannel
 		console.log('new dataChannel');
@@ -106,7 +134,7 @@ slave.on('newclco', clCo => { // triggered each time a client connects
 ```
 
 
-## Try the example!
+## Example
 
 ```sh
 $ npm install
@@ -116,6 +144,8 @@ $ node example/slave.js # in a different terminal
 
 Now open your browser at `http://localhost:8081/`.
 
+
+## Contributing
 
 If you modify server code, you have to run `node bundler.js` to bundle your changes.
 If you modify client code, the master takes care of re-bundling for you in development environment. In production (i.e. `$NODE_ENV` is set to `production`) you have to restart the master.

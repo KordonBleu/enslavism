@@ -21,7 +21,7 @@ function generateClientSource() {
 		}
 		return new Promise((resolve, reject) => {
 			rollup.rollup({
-				entry: 'client/client.js',
+				entry: 'client/master_connection.js',
 				plugins
 			}).then(bundle => {
 				clientSource = bundle.generate({

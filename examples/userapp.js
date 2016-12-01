@@ -1,6 +1,6 @@
 let masterCon = new MasterConnection('ws://localhost:8081');
 
-masterCon.onSlave = slave => {
+masterCon.addEventListener('slave', slaveCo => {
 	console.log('new slave', slave);
 	slave.connect();
 	slave.createDataChannel('test')
@@ -10,4 +10,4 @@ masterCon.onSlave = slave => {
 		});
 		dc.send('What have I wrought!');
 	});
-};
+});
