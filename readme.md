@@ -25,9 +25,9 @@ Basically, you have:
 
 ## API
 
-It is recommended that you also take a look at the [examples](#example).
+It is recommended that you also take a look at the [examples](#examples).
 
-## Client
+## Browser
 
 You need to include `/enslavism/client.js` in your HTML document like so:
 
@@ -70,7 +70,7 @@ Connect to a slave.
 #### slaveConnection.createDataChannel(dataChannelName)
 
 Create a new data channel. Returns a Promise that resolves with the data channel.
-**Fails if the slave is not connected.**
+If the `slaveConnection.connect()` has not been run, it will automatically be, but connecting in advance can speed up the process.
 
 ```JavaScript
 slaveCo.createDataChannel('test').then(dc => {
@@ -81,17 +81,19 @@ slaveCo.createDataChannel('test').then(dc => {
 });
 ```
 
-## Master
+## Node.js
 
-You can create a master, specifying on which port you want it to run:
+### Class: enslavism.Master
+
+#### new enslavism.Master(port | httpServer)
+
+Create an Enslavism master.
 
 ```JavaScript
 const Master = require('enslavism').Master;
 
 let myMaster = new Master(8080); // creates master listening on port 8080
 ```
-
-Or you can force it to use an existing `http.Server`:
 
 ```JavaScript
 const Master = require('enslavism').Master,
@@ -105,36 +107,55 @@ myServer.listen(8081);
 let myMaster = new Master(myServer);
 ```
 
-## Slave
+### Class: enslavism.Slave
 
-### Creation
+#### new enslavism.Slave(masterWsUrl, userData)
+
+`userData` will be available to all clients.
 
 ```JavaScript
-let slave = new enslavism.Slave('ws://localhost:8081', { // address of the master
-	name: 'my slave server', // this data will be available to all clients
+let slave = new enslavism.Slave('ws://localhost:8081', {
+	name: 'my slave server',
 	connectedAmount: 16
 });
 ```
 
-### Events
+#### Event: 'newclco'
+
+* clientCo: enslavism.ClientConnection
+
+Triggered each time a client connects.
 
 ```JavaScript
-slave.on('newclco', clCo => { // triggered each time a client connects
-	clCo.on('newdc', dc => { // triggered each time a client creates a datachannel
-		console.log('new dataChannel');
-		dc.addEventListener('open', (ev) => { // triggered once the datachannel is open
-			console.log('data channel open', ev);
-			dc.send('hallo welt');
-		});
-		dc.addEventListener('message', msg => { // triggered when receiving a message from a client
-			console.log(msg);
-		});
+slave.on('newclco', clientCo => { 
+	console.log(clientCo);
+});
+```
+
+### Class: enslavism.ClientConnection
+
+#### Event: 'newdc'
+
+* dc: DataChannel
+
+Triggered each time a client creates a datachannel.
+
+```JavaScript
+clientCo.on('newdc', dc => {
+	console.log('new dataChannel', dc);
+
+	dc.addEventListener('open', ev => { // triggered once the datachannel is open
+		console.log('data channel open', ev);
+		dc.send('hallo welt');
+	});
+	dc.addEventListener('message', msg => { // triggered when receiving a message from a client
+		console.log(msg);
 	});
 });
 ```
 
 
-## Example
+## Examples
 
 ```sh
 $ npm install

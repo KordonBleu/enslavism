@@ -19,8 +19,9 @@ export default class SlaveConnection {
 			this.master._masterSocket.send(message.iceCandidateToSlave.serialize(this.id, candidate));
 		});
 	}
-	createDataChannel(dcName) { // TODO: connect if not already connected
+	createDataChannel(dcName) {
 		return new Promise((resolve, reject) => {
+			if (this.slaveCon === undefined) this.connect();
 			let dc;
 			try {
 				dc = this.slaveCon.createDataChannel(dcName);

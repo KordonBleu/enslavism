@@ -2,7 +2,7 @@ const http = require('http'),
 	fs = require('fs'),
 	enslavism = require('..');
 
-var masterServer1 = new enslavism.Master(8080);
+var masterServer1 = new enslavism.Master(8080); // port
 
 var httpServer = http.createServer((req, res) => {
 	let path = req.url === '/' ? '/index.html' : req.url;
