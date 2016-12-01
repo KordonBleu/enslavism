@@ -34,10 +34,16 @@
     "utf-8-validate": "1.x"
   },
   "devDependencies": {
-    "ava": "0.x"
+    "ava": "0.x",
+    "babel-plugin-transform-rename-import": "2.x"
   },
   "scripts": {
     "test": "node_modules/ava/cli.js tests/",
     "prepublish": "node bundler.js"
+  },
+  "ava": {
+    "require": [
+      "babel-register"
+    ]
   }
 }

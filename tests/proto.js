@@ -1,5 +1,5 @@
 import test from 'ava';
-import message from '../message.js';
+import * as proto from '../shared/proto.js';
 
 test('register', t => {
 	let userData = {
@@ -9,8 +9,8 @@ test('register', t => {
 			integer: 8988798,
 			float: 80.3
 		},
-		buf = message.register.serialize(userData),
-		res = message.register.deserialize(buf);
+		buf = proto.register.serialize(userData),
+		res = proto.register.deserialize(buf);
 
 	t.deepEqual(userData, res);
 });
@@ -33,8 +33,8 @@ test('addSlaves', t => {
 				}
 			}
 		],
-		buf = message.addSlaves.serialize(slaves),
-		res = message.addSlaves.deserialize(buf);
+		buf = proto.addSlaves.serialize(slaves),
+		res = proto.addSlaves.deserialize(buf);
 
 	t.deepEqual(slaves, res);
 });
