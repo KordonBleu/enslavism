@@ -9,3 +9,7 @@ export function bufferToString(arrayBuffer) {
 		tmpBuf = new Buffer(arrayBuffer);
 	return decoder.write(tmpBuf);
 }
+
+export function bufferToArrayBuffer(buf) {
+	return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+}

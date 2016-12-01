@@ -1,4 +1,5 @@
-import * as message from '../shared/proto.js';
+import * as proto from '../shared/proto.js';
+import * as convert from './convert.js';
 import ClientConnection from './client_connection.js';
 
 const EventEmitter = require('events'),
@@ -13,22 +14,22 @@ export default class Slave extends EventEmitter {
 		this.connections = [];
 
 		this.ws.on('open', () => {
-			this.ws.send(message.register.serialize(userData));
+			this.ws.send(proto.register.serialize(userData));
 		});
 		this.ws.on('message', msg => {
-			msg = msg.buffer.slice(msg.byteOffset, msg.byteOffset + msg.byteLength); // convert `Buffer` to `ArrayBuffer`
-			switch (new Uint8Array(msg)[0]) {
-				case message.offerFromClient.type: {
+			msg = convert.bufferToArrayBuffer(msg);
+			switch (proto.getSerializator(msg)) {
+				case proto.offerFromClient: {
 					console.log('got an offerFromClient');
-					let {id, sdp} = message.offerFromClient.deserialize(msg),
+					let {id, sdp} = proto.offerFromClient.deserialize(msg),
 						clCo = new ClientConnection(id, sdp, this);
 					this.connections.push(clCo);
 					this.emit('newclco', clCo);
 					break;
 				}
-				case message.iceCandidateFromClient.type: {
+				case proto.iceCandidateFromClient: {
 					console.log('got an iceCandidateFromC');
-					let {id, sdpMid, sdpMLineIndex, candidate} = message.iceCandidateFromClient.deserialize(msg);
+					let {id, sdpMid, sdpMLineIndex, candidate} = proto.iceCandidateFromClient.deserialize(msg);
 					console.log(sdpMid, sdpMLineIndex, candidate);
 					let receiver = this.findClient(id);
 					if (receiver !== undefined) {

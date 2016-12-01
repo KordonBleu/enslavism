@@ -1,4 +1,4 @@
-import * as message from '../shared/proto.js';
+import * as proto from '../shared/proto.js';
 
 var RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection;
 
@@ -16,7 +16,7 @@ class SlaveConnection {
 		this.slaveCon = new RTCPeerConnection(null);
 		this.slaveCon.addEventListener('icecandidate', candidate => {
 			if(!candidate.candidate) return;
-			this.master._masterSocket.send(message.iceCandidateToSlave.serialize(this.id, candidate));
+			this.master._masterSocket.send(proto.iceCandidateToSlave.serialize(this.id, candidate));
 		});
 	}
 	createDataChannel(dcName) {
@@ -36,7 +36,7 @@ class SlaveConnection {
 			this.slaveCon.createOffer().then(offer => {
 				let descTest = new RTCSessionDescription(offer);
 				this.slaveCon.setLocalDescription(descTest);
-				this.master._masterSocket.send(message.offerToSlave.serialize(this.id, offer.sdp));
+				this.master._masterSocket.send(proto.offerToSlave.serialize(this.id, offer.sdp));
 			});
 		});
 	}
@@ -59,30 +59,30 @@ export default class MasterConnection {
 		this._masterSocket = new WebSocket(url + '/enslavism/clients');
 		this._masterSocket.binaryType = 'arraybuffer';
 		this._masterSocket.addEventListener('message', (msg) => {
-			switch (new Uint8Array(msg.data)[0]) {
-				case message.addSlaves.type:
+			switch (proto.getSerializator(msg.data)) {
+				case proto.addSlaves:
 					console.log('got addServers');
-					for (let slave of message.addSlaves.deserialize(msg.data)) {
+					for (let slave of proto.addSlaves.deserialize(msg.data)) {
 						console.log(slave, msg.data);
 						let slaveCo = new SlaveConnection(slave.id, slave.userData, this);
 						this._slaves.push(slaveCo);
 						if (this.onSlave !== undefined) this.onSlave(slaveCo);
 					}
 					break;
-				case message.removeSlaves.type:
+				case proto.removeSlaves:
 					console.log('got removeServers');
-					for (let rmId of message.removeSlaves.deserialize(msg.data)) {
+					for (let rmId of proto.removeSlaves.deserialize(msg.data)) {
 						this._slaves.splice(rmId, 1);
 					}
 					break;
-				case message.answerFromSlave.type: {
-					let {id, sdp} = message.answerFromSlave.deserialize(msg.data),
+				case proto.answerFromSlave: {
+					let {id, sdp} = proto.answerFromSlave.deserialize(msg.data),
 						receiver = this.findSlave(id);
 					if (receiver !== undefined) receiver._setRemoteDescription(sdp);
 					break;
 				}
-				case message.iceCandidateFromSlave.type: {
-					let {id, sdpMid, sdpMLineIndex, candidate} = message.iceCandidateFromSlave.deserialize(msg.data),
+				case proto.iceCandidateFromSlave: {
+					let {id, sdpMid, sdpMLineIndex, candidate} = proto.iceCandidateFromSlave.deserialize(msg.data),
 						receiver = this.findSlave(id);
 					if (receiver !== undefined) receiver._addIceCandidate(candidate, sdpMid, sdpMLineIndex);
 					break;

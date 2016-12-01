@@ -1,4 +1,4 @@
-import * as message from '../shared/proto.js';
+import * as proto from '../shared/proto.js';
 
 const EventEmitter = require('events'),
 	webrtc = require('wrtc');
@@ -14,7 +14,7 @@ export default class ClientConnection extends EventEmitter {
 		this.clientCon = new webrtc.RTCPeerConnection();
 		this.clientCon.onicecandidate = (iceEv) => {
 			if (!iceEv.candidate) return;
-			this.slave.ws.send(message.iceCandidateToClient.serialize(id, iceEv.candidate));
+			this.slave.ws.send(proto.iceCandidateToClient.serialize(id, iceEv.candidate));
 		};
 		this.clientCon.ondatachannel = ev => {
 			this.emit('newdc', ev.channel);
@@ -29,7 +29,7 @@ export default class ClientConnection extends EventEmitter {
 			return this.clientCon.createAnswer();
 		}).then(answer => {
 			this.clientCon.setLocalDescription(answer).then(() => {
-				this.slave.ws.send(message.answerToClient.serialize(id, answer.sdp));
+				this.slave.ws.send(proto.answerToClient.serialize(id, answer.sdp));
 			}).catch(err => {
 				console.log(err);
 			});

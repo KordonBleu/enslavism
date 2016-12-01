@@ -1,4 +1,5 @@
-import * as message from '../shared/proto.js';
+import * as proto from '../shared/proto.js';
+import * as convert from './convert.js';
 
 const http = require('http'),
 	WebSocketServer = require('ws').Server,
@@ -36,9 +37,6 @@ function generateClientSource() {
 
 export default class Master {
 	constructor(server) {
-		function bufferToArrayBuffer(buf) {
-			return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
-		}
 		if (typeof server === 'number') {
 			this._httpServer = http.createServer((req, res) => {
 				if (req.url === '/enslavism/client.js') {
@@ -85,32 +83,32 @@ export default class Master {
 			ws.id = this.giveId(this._slavesSocket);
 
 			ws.on('message', msg => {
-				msg = bufferToArrayBuffer(msg);
+				msg = convert.bufferToArrayBuffer(msg);
 
-				switch (new Uint8Array(msg)[0]) {
-					case message.register.type: {
-						ws.userData = message.register.deserialize(msg);
-						let newSlaveBuf = message.addSlaves.serialize([ws]);
+				switch (proto.getSerializator(msg)) {
+					case proto.register: {
+						ws.userData = proto.register.deserialize(msg);
+						let newSlaveBuf = proto.addSlaves.serialize([ws]);
 						for (let client of this._clientsSocket.clients) {
 							client.send(newSlaveBuf);
 						}
 						break;
 					}
-					case message.answerToClient.type: {
+					case proto.answerToClient: {
 						console.log('got an answer from slave');
-						let receiver = this.findClient(message.answerToClient.getDestId(msg));
+						let receiver = this.findClient(proto.answerToClient.getDestId(msg));
 						if (receiver !== undefined) {
-							message.answerFromSlave.setDestId(msg, ws.id);
+							proto.answerFromSlave.setDestId(msg, ws.id);
 							receiver.send(msg);
 						}
 						break;
 					}
-					case message.iceCandidateToClient.type: {
+					case proto.iceCandidateToClient: {
 						console.log('got an ice candidate from a slave');
-						console.log(message.iceCandidateToClient.deserialize(msg));
-						let receiver = this.findClient(message.iceCandidateToClient.getDestId(msg));
+						console.log(proto.iceCandidateToClient.deserialize(msg));
+						let receiver = this.findClient(proto.iceCandidateToClient.getDestId(msg));
 						if (receiver !== undefined) {
-							message.iceCandidateFromSlave.setDestId(msg, ws.id);
+							proto.iceCandidateFromSlave.setDestId(msg, ws.id);
 							receiver.send(msg);
 						}
 						break;
@@ -119,7 +117,7 @@ export default class Master {
 				}
 			});
 			ws.on('close', () => {
-				let removeSlaveBuf = message.removeSlaves.serialize([ws.id]);
+				let removeSlaveBuf = proto.removeSlaves.serialize([ws.id]);
 				for (let client of this._clientsSocket.clients) {
 					client.send(removeSlaveBuf);
 				}
@@ -130,27 +128,27 @@ export default class Master {
 			ws.id = this.giveId(this._clientsSocket);
 
 			console.log('client connected');
-			ws.send(message.addSlaves.serialize(this._slavesSocket.clients));
+			ws.send(proto.addSlaves.serialize(this._slavesSocket.clients));
 
 			ws.on('message', msg => {
-				msg = bufferToArrayBuffer(msg);
+				msg = convert.bufferToArrayBuffer(msg);
 
-				switch (new Uint8Array(msg)[0]) {
-					case message.offerToSlave.type: {
+				switch (proto.getSerializator(msg)) {
+					case proto.offerToSlave: {
 						console.log('got an offerToSlave from a client');
-						let receiver = this.findSlave(message.offerFromClient.getDestId(msg));
+						let receiver = this.findSlave(proto.offerFromClient.getDestId(msg));
 						if (receiver !== undefined) {
-							message.offerFromClient.setDestId(msg, ws.id);
+							proto.offerFromClient.setDestId(msg, ws.id);
 							receiver.send(msg);
 						}
 						break;
 					}
-					case message.iceCandidateToSlave.type: {
+					case proto.iceCandidateToSlave: {
 						console.log('got an ice candidate from a client');
-						console.log(message.iceCandidateToSlave.deserialize(msg));
-						let receiver = this.findSlave(message.iceCandidateToSlave.getDestId(msg));
+						console.log(proto.iceCandidateToSlave.deserialize(msg));
+						let receiver = this.findSlave(proto.iceCandidateToSlave.getDestId(msg));
 						if (receiver !== undefined) {
-							message.iceCandidateFromClient.setDestId(msg, ws.id);
+							proto.iceCandidateFromClient.setDestId(msg, ws.id);
 							receiver.send(msg);
 						}
 						break;

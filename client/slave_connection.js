@@ -1,4 +1,4 @@
-import * as message from '../shared/proto.js';
+import * as proto from '../shared/proto.js';
 
 var RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection;
 
@@ -16,7 +16,7 @@ export default class SlaveConnection {
 		this.slaveCon = new RTCPeerConnection(null);
 		this.slaveCon.addEventListener('icecandidate', candidate => {
 			if(!candidate.candidate) return;
-			this.master._masterSocket.send(message.iceCandidateToSlave.serialize(this.id, candidate));
+			this.master._masterSocket.send(proto.iceCandidateToSlave.serialize(this.id, candidate));
 		});
 	}
 	createDataChannel(dcName) {
@@ -37,7 +37,7 @@ export default class SlaveConnection {
 			this.slaveCon.createOffer().then(offer => {
 				let descTest = new RTCSessionDescription(offer);
 				this.slaveCon.setLocalDescription(descTest);
-				this.master._masterSocket.send(message.offerToSlave.serialize(this.id, offer.sdp));
+				this.master._masterSocket.send(proto.offerToSlave.serialize(this.id, offer.sdp));
 			});
 		});
 	}

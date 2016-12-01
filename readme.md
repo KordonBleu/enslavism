@@ -23,19 +23,31 @@ Basically, you have:
 * configurable delivery ordering (unordered is fast!)
 * an architecture that allows browser clients to choose which independent server to connect to (useful for games)
 
-## API
 
-It is recommended that you also take a look at the [examples](#examples).
+## Examples
 
-## Browser
+```sh
+$ npm install
+$ node example/master.js
+$ node example/slave.js # in a different terminal
+```
+
+Now open your browser at `http://localhost:8081/`.
+
+
+## Contributing
+
+If you modify server code, you have to run `node bundler.js` to bundle your changes.
+If you modify client code, the master takes care of re-bundling for you in development environment. In production (i.e. `$NODE_ENV` is set to `production`) you have to restart the master.
+
+
+## Browser API
 
 You need to include `/enslavism/client.js` in your HTML document like so:
 
 ```HTML
 <script src="/enslavism/client.js"></script>
 ```
-
-Then you can create a connection to a master server:
 
 ### Class: MasterConnection
 
@@ -81,7 +93,7 @@ slaveCo.createDataChannel('test').then(dc => {
 });
 ```
 
-## Node.js
+## Node.js API
 
 ### Class: enslavism.Master
 
@@ -153,20 +165,3 @@ clientCo.on('newdc', dc => {
 	});
 });
 ```
-
-
-## Examples
-
-```sh
-$ npm install
-$ node example/master.js
-$ node example/slave.js # in a different terminal
-```
-
-Now open your browser at `http://localhost:8081/`.
-
-
-## Contributing
-
-If you modify server code, you have to run `node bundler.js` to bundle your changes.
-If you modify client code, the master takes care of re-bundling for you in development environment. In production (i.e. `$NODE_ENV` is set to `production`) you have to restart the master.

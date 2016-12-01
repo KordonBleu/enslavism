@@ -1,8 +1,11 @@
 import * as convert from '<@convert@>';
 
+let serializators = [];
+
 class Serializator {
 	constructor(type) {
 		this.type = type;
+		serializators[type] = this;
 	}
 	serialize(userData) {
 		let userDataBuf = convert.stringToBuffer(JSON.stringify(userData)),
@@ -167,3 +170,9 @@ export let register = new Serializator(0),
 	iceCandidateFromClient = new IceCandidateSerializator(8),
 	iceCandidateToClient = new IceCandidateSerializator(9),
 	iceCandidateFromSlave = new IceCandidateSerializator(10);
+
+export function getSerializator(buffer) {
+	let enumVal = new Uint8Array(buffer)[0];
+
+	return serializators[enumVal];
+}
