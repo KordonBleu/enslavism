@@ -7,7 +7,7 @@ var masterServer1 = new enslavism.Master(8080); // port
 var httpServer = http.createServer((req, res) => {
 	let path = req.url === '/' ? '/index.html' : req.url;
 	fs.readFile(__dirname + path, (err, data) => {
-		if (err) console.log(err);
+		if (err) console.error(err);
 		res.writeHead(200);
 		res.end(data);
 	});

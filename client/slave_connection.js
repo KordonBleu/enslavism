@@ -16,7 +16,7 @@ export default class SlaveConnection {
 		this.slaveCon = new RTCPeerConnection(null);
 		this.slaveCon.addEventListener('icecandidate', candidate => {
 			if(!candidate.candidate) return;
-			this.master._masterSocket.send(proto.iceCandidateToSlave.serialize(this.id, candidate));
+			this.master._masterSocket.send(proto.iceCandidateToSlave.serialize(this.id, candidate.candidate));
 		});
 	}
 	createDataChannel(dcName) {
@@ -31,12 +31,11 @@ export default class SlaveConnection {
 
 			dc.addEventListener('open', () => {
 				this.dataChannels[dcName] = dc;
-				console.log('Data channel open');
 				resolve(dc);
 			});
 			this.slaveCon.createOffer().then(offer => {
-				let descTest = new RTCSessionDescription(offer);
-				this.slaveCon.setLocalDescription(descTest);
+				let desc = new RTCSessionDescription(offer);
+				this.slaveCon.setLocalDescription(desc);
 				this.master._masterSocket.send(proto.offerToSlave.serialize(this.id, offer.sdp));
 			});
 		});
@@ -46,10 +45,8 @@ export default class SlaveConnection {
 			type: 'answer',
 			sdp
 		}));
-		console.log('remote description set');
 	}
 	_addIceCandidate(candidate, sdpMid, sdpMLineIndex) {
 		this.slaveCon.addIceCandidate(new RTCIceCandidate({candidate, sdpMid, sdpMLineIndex}));
-		console.log('ice candidate added');
 	}
 }

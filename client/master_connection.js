@@ -12,9 +12,7 @@ export default class MasterConnection extends EventEmitter {
 		this._masterSocket.addEventListener('message', (msg) => {
 			switch (proto.getSerializator(msg.data)) {
 				case proto.addSlaves:
-					console.log('got addServers');
 					for (let slave of proto.addSlaves.deserialize(msg.data)) {
-						console.log(slave, msg.data);
 						let slaveCo = new SlaveConnection(slave.id, slave.userData, this);
 						this._slaves.push(slaveCo);
 						this.emit('slave', slaveCo);
@@ -22,7 +20,6 @@ export default class MasterConnection extends EventEmitter {
 					}
 					break;
 				case proto.removeSlaves:
-					console.log('got removeServers');
 					for (let rmId of proto.removeSlaves.deserialize(msg.data)) {
 						this._slaves.splice(rmId, 1);
 					}

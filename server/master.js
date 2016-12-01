@@ -95,7 +95,6 @@ export default class Master {
 						break;
 					}
 					case proto.answerToClient: {
-						console.log('got an answer from slave');
 						let receiver = this.findClient(proto.answerToClient.getDestId(msg));
 						if (receiver !== undefined) {
 							proto.answerFromSlave.setDestId(msg, ws.id);
@@ -104,8 +103,6 @@ export default class Master {
 						break;
 					}
 					case proto.iceCandidateToClient: {
-						console.log('got an ice candidate from a slave');
-						console.log(proto.iceCandidateToClient.deserialize(msg));
 						let receiver = this.findClient(proto.iceCandidateToClient.getDestId(msg));
 						if (receiver !== undefined) {
 							proto.iceCandidateFromSlave.setDestId(msg, ws.id);
@@ -135,7 +132,6 @@ export default class Master {
 
 				switch (proto.getSerializator(msg)) {
 					case proto.offerToSlave: {
-						console.log('got an offerToSlave from a client');
 						let receiver = this.findSlave(proto.offerFromClient.getDestId(msg));
 						if (receiver !== undefined) {
 							proto.offerFromClient.setDestId(msg, ws.id);
@@ -144,8 +140,6 @@ export default class Master {
 						break;
 					}
 					case proto.iceCandidateToSlave: {
-						console.log('got an ice candidate from a client');
-						console.log(proto.iceCandidateToSlave.deserialize(msg));
 						let receiver = this.findSlave(proto.iceCandidateToSlave.getDestId(msg));
 						if (receiver !== undefined) {
 							proto.iceCandidateFromClient.setDestId(msg, ws.id);

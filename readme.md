@@ -134,7 +134,7 @@ let slave = new enslavism.Slave('ws://localhost:8081', {
 
 #### Event: 'newclco'
 
-* clientCo: enslavism.ClientConnection
+* `clientCo`: enslavism.ClientConnection
 
 Triggered each time a client connects.
 
@@ -148,7 +148,7 @@ slave.on('newclco', clientCo => {
 
 #### Event: 'newdc'
 
-* dc: DataChannel
+* `dc`: DataChannel
 
 Triggered each time a client creates a datachannel.
 

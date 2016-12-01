@@ -30,12 +30,8 @@ export default class ClientConnection extends EventEmitter {
 		}).then(answer => {
 			this.clientCon.setLocalDescription(answer).then(() => {
 				this.slave.ws.send(proto.answerToClient.serialize(id, answer.sdp));
-			}).catch(err => {
-				console.log(err);
-			});
-		}).catch(err => {
-			console.log('error: ' + err);
-		});
+			}).catch(console.error);
+		}).catch(console.error);
 	}
 }
 

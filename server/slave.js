@@ -20,7 +20,6 @@ export default class Slave extends EventEmitter {
 			msg = convert.bufferToArrayBuffer(msg);
 			switch (proto.getSerializator(msg)) {
 				case proto.offerFromClient: {
-					console.log('got an offerFromClient');
 					let {id, sdp} = proto.offerFromClient.deserialize(msg),
 						clCo = new ClientConnection(id, sdp, this);
 					this.connections.push(clCo);
@@ -28,17 +27,12 @@ export default class Slave extends EventEmitter {
 					break;
 				}
 				case proto.iceCandidateFromClient: {
-					console.log('got an iceCandidateFromC');
 					let {id, sdpMid, sdpMLineIndex, candidate} = proto.iceCandidateFromClient.deserialize(msg);
-					console.log(sdpMid, sdpMLineIndex, candidate);
 					let receiver = this.findClient(id);
 					if (receiver !== undefined) {
-						receiver.clientCon.addIceCandidate(new webrtc.RTCIceCandidate(candidate, sdpMid, sdpMLineIndex))
-						.then(() => {
-							console.log('adding ICE candidate: succes');
-						})
+						receiver.clientCon.addIceCandidate(new webrtc.RTCIceCandidate({candidate, sdpMid, sdpMLineIndex}))
 						.catch(e => {
-							console.log('adding ICE candidate: failure', e, id, sdpMid, sdpMLineIndex, candidate);
+							console.error('adding ICE candidate: failure', e, id, sdpMid, sdpMLineIndex, candidate);
 						});
 					}
 					break;
