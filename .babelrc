@@ -1,6 +1,6 @@
 {
 	"presets": ["es2015"],
 	"plugins": [
-		["transform-rename-import", { original: '<@convert@>', replacement: '../server/convert.js' }]
+		["module-resolver", { "alias": { "<@convert@>": "./server/convert.js" } }]
 	]
 }

@@ -1,7 +1,7 @@
 {
   "name": "enslavism",
-  "version": "0.0.0",
-  "description": "A framework to deploy authoritative WebRTC game servers with a master",
+  "version": "0.1.0",
+  "description": "A framework to manage distributed WebRTC servers that communicate with browser clients",
   "main": "bundle.js",
   "repository": {
     "type": "git",
@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "ava": "0.x",
-    "babel-plugin-transform-rename-import": "2.x"
+    "babel-plugin-module-resolver": "2.x"
   },
   "scripts": {
     "test": "node_modules/ava/cli.js tests/",
