@@ -17,7 +17,7 @@ export default class ClientConnection extends EventEmitter {
 			this.slave.ws.send(proto.iceCandidateToClient.serialize(id, iceEv.candidate));
 		};
 		this.clientCon.ondatachannel = ev => {
-			this.emit('newdc', ev.channel);
+			this.emit('datachannel', ev.channel);
 		};
 
 		let desc = new webrtc.RTCSessionDescription({

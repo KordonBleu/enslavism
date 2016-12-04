@@ -1,12 +1,18 @@
 const enslavism = require('..');
 
-let slave = new enslavism.Slave('ws://localhost:8081', {
+let connectedClients = 0,
+	slave = new enslavism.Slave('ws://localhost:8081', {
 	name: 'Test slave server', // this data is visible
 	connectedAmount: 16 // by all clients
 });
 
-slave.on('newclco', clCo => {
-	clCo.on('newdc', dc => {
+slave.on('offer', reject => { // this prevent more than one client to be connected
+	if (connectedClients > 0) reject(); // this is an example of what you can do of course, I don't know why you would want to do this
+	else connectedClients += 1;
+});
+
+slave.on('connection', clCo => {
+	clCo.on('datachannel', dc => {
 		console.log('new dataChannel');
 		dc.addEventListener('open', ev => {
 			console.log('data channel open', ev);

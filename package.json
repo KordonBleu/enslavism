@@ -1,6 +1,6 @@
 {
   "name": "enslavism",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A framework to manage distributed WebRTC servers that communicate with browser clients",
   "main": "bundle.js",
   "repository": {
@@ -16,6 +16,7 @@
     "enslavism",
     "master",
     "master server",
+    "slave",
     "game",
     "webrtc",
     "datachannel",
@@ -39,7 +40,7 @@
   },
   "scripts": {
     "test": "node_modules/ava/cli.js tests/",
-    "prepublish": "node bundler.js"
+    "postinstall": "node bundler.js"
   },
   "ava": {
     "require": [

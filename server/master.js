@@ -110,6 +110,13 @@ export default class Master {
 						}
 						break;
 					}
+					case proto.rejectToClient: {
+						let receiver = this.findClient(proto.rejectToClient.deserialize(msg));
+						if (receiver !== undefined) {
+							receiver.send(proto.rejectFromSlave.serialize(ws.id));
+						}
+						break;
+					}
 
 				}
 			});

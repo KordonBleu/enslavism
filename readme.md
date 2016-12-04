@@ -6,14 +6,14 @@ It has been created to be used by [JumpSuit](https://github.com/KordonBleu/jumps
 
 Basically, you have:
 
-* **a** master server (Node.js)
+* a master server (Node.js)
     * knows all slaves and all clients
     * synchronises the slave list across all clients
 * slaves (Node.js)
     * where you handle the business logic of your application (ex: game server)
-    * you may accept WebRTC connections from clients
+    * gets WebRTC connction requests from client (that you can reject)
 * clients (browser)
-    * you may request a WebRTC connection to a slave in the slave list
+    * may request a WebRTC connection to a slave in the slave list
 
 
 ## The point
@@ -53,7 +53,7 @@ You need to include `/enslavism/client.js` in your HTML document like so:
 
 #### new MasterConnection(masterWsUrl)
 
-```JavaScript
+```JS
 let masterCon = new MasterConnection('ws://localhost:8081');
 ```
 
@@ -67,13 +67,23 @@ An array of received slaves.
 
 Triggered when a new slave is received.
 
-```JavaScript
+```JS
 masterCon.addEventListener('slave', slaveCo => { // triggered when a new slave is received
 	console.log('new slave', slaveCo);
 });
 ```
 
 ### Class: SlaveConnection
+
+#### Event: 'rejected'
+
+Triggered when a slave the client attempted to connect to rejected the connection.
+
+```JS
+slaveCo.addEventListener('rejected', () => {
+	console.log('The slave has rejected the connection :-(');
+});
+```
 
 #### slaveConnection.connect()
 
@@ -84,7 +94,7 @@ Connect to a slave.
 Create a new data channel. Returns a Promise that resolves with the data channel.
 If the `slaveConnection.connect()` has not been run, it will automatically be, but connecting in advance can speed up the process.
 
-```JavaScript
+```JS
 slaveCo.createDataChannel('test').then(dc => {
 	dc.addEventListener('message', msg => {
 		console.log(msg);
@@ -101,13 +111,13 @@ slaveCo.createDataChannel('test').then(dc => {
 
 Create an Enslavism master.
 
-```JavaScript
+```JS
 const Master = require('enslavism').Master;
 
 let myMaster = new Master(8080); // creates master listening on port 8080
 ```
 
-```JavaScript
+```JS
 const Master = require('enslavism').Master,
 	http = require('http');
 
@@ -125,35 +135,48 @@ let myMaster = new Master(myServer);
 
 `userData` will be available to all clients.
 
-```JavaScript
+```JS
 let slave = new enslavism.Slave('ws://localhost:8081', {
 	name: 'my slave server',
 	connectedAmount: 16
 });
 ```
 
-#### Event: 'newclco'
+#### Event: 'offer'
+
+* `reject`: Function
+
+Triggered each time a client wants to connect.
+If `reject` is called, the connection will be rejected.
+
+```JS
+slave.on('offer', reject => {
+	if (connectedClientAmount > 10) reject();
+});
+```
+
+#### Event: 'connection'
 
 * `clientCo`: enslavism.ClientConnection
 
 Triggered each time a client connects.
 
-```JavaScript
-slave.on('newclco', clientCo => { 
+```JS
+slave.on('connection', clientCo => { 
 	console.log(clientCo);
 });
 ```
 
 ### Class: enslavism.ClientConnection
 
-#### Event: 'newdc'
+#### Event: 'datachannel'
 
 * `dc`: DataChannel
 
 Triggered each time a client creates a datachannel.
 
-```JavaScript
-clientCo.on('newdc', dc => {
+```JS
+clientCo.on('datachannel', dc => {
 	console.log('new dataChannel', dc);
 
 	dc.addEventListener('open', ev => { // triggered once the datachannel is open

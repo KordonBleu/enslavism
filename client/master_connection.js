@@ -11,19 +11,20 @@ export default class MasterConnection extends EventEmitter {
 		this._masterSocket.binaryType = 'arraybuffer';
 		this._masterSocket.addEventListener('message', (msg) => {
 			switch (proto.getSerializator(msg.data)) {
-				case proto.addSlaves:
+				case proto.addSlaves: {
 					for (let slave of proto.addSlaves.deserialize(msg.data)) {
 						let slaveCo = new SlaveConnection(slave.id, slave.userData, this);
 						this._slaves.push(slaveCo);
 						this.emit('slave', slaveCo);
-						//if (this.onSlave !== undefined) this.onSlave(slaveCo);
 					}
 					break;
-				case proto.removeSlaves:
+				}
+				case proto.removeSlaves: {
 					for (let rmId of proto.removeSlaves.deserialize(msg.data)) {
 						this._slaves.splice(rmId, 1);
 					}
 					break;
+				}
 				case proto.answerFromSlave: {
 					let {id, sdp} = proto.answerFromSlave.deserialize(msg.data),
 						receiver = this.findSlave(id);
@@ -34,6 +35,15 @@ export default class MasterConnection extends EventEmitter {
 					let {id, sdpMid, sdpMLineIndex, candidate} = proto.iceCandidateFromSlave.deserialize(msg.data),
 						receiver = this.findSlave(id);
 					if (receiver !== undefined) receiver._addIceCandidate(candidate, sdpMid, sdpMLineIndex);
+					break;
+				}
+				case proto.rejectFromSlave: {
+					let id = proto.rejectFromSlave.deserialize(msg.data),
+						receiver = this.findSlave(id);
+					if (receiver !== undefined) {
+						receiver.close();
+						receiver.emit('rejected');
+					}
 					break;
 				}
 			}

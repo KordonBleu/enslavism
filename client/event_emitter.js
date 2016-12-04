@@ -13,7 +13,7 @@ export default class EventEmitter {
 	emit(event, ...values) {
 		if (this._eventListeners[event] !== undefined) {
 			for (let listener of this._eventListeners[event]) {
-				listener.apply(null, values);
+				listener.apply(this, values);
 			}
 		}
 	}

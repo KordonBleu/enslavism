@@ -21,9 +21,17 @@ export default class Slave extends EventEmitter {
 			switch (proto.getSerializator(msg)) {
 				case proto.offerFromClient: {
 					let {id, sdp} = proto.offerFromClient.deserialize(msg),
-						clCo = new ClientConnection(id, sdp, this);
-					this.connections.push(clCo);
-					this.emit('newclco', clCo);
+						accept = true;
+					this.emit('offer', () => {
+						accept = false;
+					});
+					if (accept) {
+						let clCo = new ClientConnection(id, sdp, this);
+						this.connections.push(clCo);
+						this.emit('connection', clCo);
+					} else {
+						this.ws.send(proto.rejectToClient.serialize(id));
+					}
 					break;
 				}
 				case proto.iceCandidateFromClient: {

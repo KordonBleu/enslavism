@@ -1,9 +1,12 @@
 import * as proto from '../shared/proto.js';
+import EventEmitter from './event_emitter.js';
 
 var RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection;
 
-export default class SlaveConnection {
+export default class SlaveConnection extends EventEmitter {
 	constructor(id, userData, master) {
+		super();
+
 		this.id = id;
 		this.userData = userData;
 		this.master = master;
@@ -18,6 +21,9 @@ export default class SlaveConnection {
 			if(!candidate.candidate) return;
 			this.master._masterSocket.send(proto.iceCandidateToSlave.serialize(this.id, candidate.candidate));
 		});
+	}
+	close() {
+		this.slaveCon.close();
 	}
 	createDataChannel(dcName) {
 		return new Promise((resolve, reject) => {

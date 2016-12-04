@@ -193,3 +193,22 @@ test('iceCandidateFromSlave', t => {
 
 	t.is(proto.getSerializator(buf1), proto.iceCandidateFromSlave);
 });
+
+test('rejectToClient', t => {
+	let buf = proto.rejectToClient.serialize(8998),
+		res = proto.rejectToClient.deserialize(buf);
+
+	t.is(res, 8998);
+
+	t.is(proto.getSerializator(buf), proto.rejectToClient);
+});
+
+
+test('rejectFromSlave', t => {
+	let buf = proto.rejectFromSlave.serialize(100),
+		res = proto.rejectFromSlave.deserialize(buf);
+
+	t.is(res, 100);
+
+	t.is(proto.getSerializator(buf), proto.rejectFromSlave);
+});

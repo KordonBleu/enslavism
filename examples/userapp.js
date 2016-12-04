@@ -14,4 +14,8 @@ masterCon.addEventListener('slave', slaveCo => {
 		});
 		dc.send('What have I wrought!');
 	});
+
+	slaveCo.addEventListener('rejected', () => {
+		console.log('The slave has rejected the connection :-(');
+	});
 });

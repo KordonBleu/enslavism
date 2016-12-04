@@ -7,6 +7,12 @@ class Serializator {
 		this.type = type;
 		serializators[type] = this;
 	}
+}
+
+class JsonSerializator extends Serializator {
+	constructor(type) {
+		super(type);
+	}
 	serialize(userData) {
 		let userDataBuf = convert.stringToBuffer(JSON.stringify(userData)),
 			view = new Uint8Array(1 + userDataBuf.byteLength);
@@ -159,9 +165,29 @@ class IceCandidateSerializator extends RoutableMessageSerializator {
 	}
 }
 
-export let register = new Serializator(0),
+class RejectionSerializator extends Serializator {
+	constructor(type) {
+		super(type);
+	}
+	serialize(id) {
+		let buf = new ArrayBuffer(5),
+			dView = new DataView(buf);
+
+		dView.setUint8(0, this.type);
+		dView.setUint32(1, id);
+
+		return buf;
+	}
+	deserialize(buf) {
+		let dView = new DataView(buf);
+
+		return dView.getUint32(1);
+	}
+}
+
+export let register = new JsonSerializator(0),
 	addSlaves = new AddSlavesSerializator(1),
-	removeSlaves = new Serializator(2),
+	removeSlaves = new JsonSerializator(2),
 	offerToSlave = new SessionDescriptionSerializator(3),
 	offerFromClient = new SessionDescriptionSerializator(4),
 	answerToClient = new SessionDescriptionSerializator(5),
@@ -169,7 +195,9 @@ export let register = new Serializator(0),
 	iceCandidateToSlave = new IceCandidateSerializator(7),
 	iceCandidateFromClient = new IceCandidateSerializator(8),
 	iceCandidateToClient = new IceCandidateSerializator(9),
-	iceCandidateFromSlave = new IceCandidateSerializator(10);
+	iceCandidateFromSlave = new IceCandidateSerializator(10),
+	rejectToClient = new RejectionSerializator(11),
+	rejectFromSlave = new RejectionSerializator(12);
 
 export function getSerializator(buffer) {
 	let enumVal = new Uint8Array(buffer)[0];
