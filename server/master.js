@@ -22,7 +22,7 @@ function generateClientSource() {
 		}
 		return new Promise((resolve, reject) => {
 			rollup.rollup({
-				entry: 'client/master_connection.js',
+				entry: __dirname + '/client/master_connection.js',
 				plugins
 			}).then(bundle => {
 				clientSource = bundle.generate({
@@ -59,7 +59,7 @@ export default class Master {
 					res.writeHead(200, {'Content-Type': 'application/javascript'});
 					generateClientSource().then(source => {
 						res.end(source.code);
-					});
+					}).catch(console.error);
 				} else {
 					for (let listener of userDefReqListeners) {
 						listener.call(server, req, res);

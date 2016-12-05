@@ -45,7 +45,7 @@ If you modify client code, the master takes care of re-bundling for you in devel
 
 You need to include `/enslavism/client.js` in your HTML document like so:
 
-```HTML
+```html
 <script src="/enslavism/client.js"></script>
 ```
 
@@ -53,7 +53,7 @@ You need to include `/enslavism/client.js` in your HTML document like so:
 
 #### new MasterConnection(masterWsUrl)
 
-```JS
+```javascript
 let masterCon = new MasterConnection('ws://localhost:8081');
 ```
 
@@ -67,7 +67,7 @@ An array of received slaves.
 
 Triggered when a new slave is received.
 
-```JS
+```javascript
 masterCon.addEventListener('slave', slaveCo => { // triggered when a new slave is received
 	console.log('new slave', slaveCo);
 });
@@ -79,7 +79,7 @@ masterCon.addEventListener('slave', slaveCo => { // triggered when a new slave i
 
 Triggered when a slave the client attempted to connect to rejected the connection.
 
-```JS
+```javascript
 slaveCo.addEventListener('rejected', () => {
 	console.log('The slave has rejected the connection :-(');
 });
@@ -94,7 +94,7 @@ Connect to a slave.
 Create a new data channel. Returns a Promise that resolves with the data channel.
 If the `slaveConnection.connect()` has not been run, it will automatically be, but connecting in advance can speed up the process.
 
-```JS
+```javascript
 slaveCo.createDataChannel('test').then(dc => {
 	dc.addEventListener('message', msg => {
 		console.log(msg);
@@ -111,13 +111,13 @@ slaveCo.createDataChannel('test').then(dc => {
 
 Create an Enslavism master.
 
-```JS
+```javascript
 const Master = require('enslavism').Master;
 
 let myMaster = new Master(8080); // creates master listening on port 8080
 ```
 
-```JS
+```javascript
 const Master = require('enslavism').Master,
 	http = require('http');
 
@@ -135,7 +135,7 @@ let myMaster = new Master(myServer);
 
 `userData` will be available to all clients.
 
-```JS
+```javascript
 let slave = new enslavism.Slave('ws://localhost:8081', {
 	name: 'my slave server',
 	connectedAmount: 16
@@ -149,7 +149,7 @@ let slave = new enslavism.Slave('ws://localhost:8081', {
 Triggered each time a client wants to connect.
 If `reject` is called, the connection will be rejected.
 
-```JS
+```javascript
 slave.on('offer', reject => {
 	if (connectedClientAmount > 10) reject();
 });
@@ -161,7 +161,7 @@ slave.on('offer', reject => {
 
 Triggered each time a client connects.
 
-```JS
+```javascript
 slave.on('connection', clientCo => { 
 	console.log(clientCo);
 });
@@ -175,7 +175,7 @@ slave.on('connection', clientCo => {
 
 Triggered each time a client creates a datachannel.
 
-```JS
+```javascript
 clientCo.on('datachannel', dc => {
 	console.log('new dataChannel', dc);
 
