@@ -129,11 +129,29 @@ myServer.listen(8081);
 let myMaster = new Master(myServer);
 ```
 
+#### Event: 'slave'
+
+* `authData`: Object
+* `reject`: Function
+
+Triggered when a slave wants to connect.
+If reject is called, the connection will be rejected. Reject accepts a string as an optional which is the reason the connection was rejected.
+
+`authData` is the data provided in the [slave constructor](#new-enslavismslavemasterwsurl-userdata-authdata).
+
+```javascript
+myMaster.on('slave', (authData, reject) => {
+	if (authData.username !== 'getkey' || authData.password !== 'secret') reject('Invalid credentials!');
+});
+```
+
+
 ### Class: enslavism.Slave
 
-#### new enslavism.Slave(masterWsUrl, userData)
+#### new enslavism.Slave(masterWsUrl, userData, [authData])
 
-`userData` will be available to all clients.
+`userData` will be available to all clients and can contain whatever you want.
+The optional argument `authData` in an object containing strings. It may be used to [autentificate slaves](#event-slave).
 
 ```javascript
 let slave = new enslavism.Slave('ws://localhost:8081', {

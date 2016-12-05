@@ -1,8 +1,10 @@
 import * as proto from '../shared/proto.js';
 import * as convert from './convert.js';
 
-const http = require('http'),
+const EventEmitter = require('events'),
+	http = require('http'),
 	WebSocketServer = require('ws').Server,
+	cookie = require('cookie'),
 	rollup = require('rollup'),
 	alias = require('rollup-plugin-alias'),
 	MAX_UINT32 = Math.pow(2, 32) - 1;
@@ -35,8 +37,10 @@ function generateClientSource() {
 	}
 }
 
-export default class Master {
+export default class Master extends EventEmitter {
 	constructor(server) {
+		super();
+
 		if (typeof server === 'number') {
 			this._httpServer = http.createServer((req, res) => {
 				if (req.url === '/enslavism/client.js') {
@@ -71,7 +75,21 @@ export default class Master {
 		}
 
 
-		this._slavesSocket = new WebSocketServer({server: this._httpServer, path: '/enslavism/slaves'});
+		this._slavesSocket = new WebSocketServer({
+			server: this._httpServer,
+			path: '/enslavism/slaves',
+			verifyClient: (info, cb) => {
+				let accept = true,
+					reason;
+				this.emit('slave', cookie.parse(info.req.headers.cookie), (rejectionReason) => {
+					reason = rejectionReason;
+					accept = false;
+				});
+
+				if (accept === true) cb(true);
+				else cb(false, 401, reason);
+			}
+		});
 		this._slavesSocket.currentId = 0;
 		this._slavesSocket.wrapMode = false;
 		this._clientsSocket = new WebSocketServer({server: this._httpServer, path: '/enslavism/clients'});

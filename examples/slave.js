@@ -2,9 +2,13 @@ const enslavism = require('..');
 
 let connectedClients = 0,
 	slave = new enslavism.Slave('ws://localhost:8081', {
-	name: 'Test slave server', // this data is visible
-	connectedAmount: 16 // by all clients
-});
+		name: 'Test slave server', // this data is visible
+		connectedAmount: 16 // by all clients
+	}, {
+		username: 'getkey', // this argument is optional
+		password: 'secret',
+		whateverYouWant: 'provided it\'s a string !'
+	});
 
 slave.on('offer', reject => { // this prevent more than one client to be connected
 	if (connectedClients > 0) reject(); // this is an example of what you can do of course, I don't know why you would want to do this

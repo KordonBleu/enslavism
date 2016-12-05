@@ -4,13 +4,28 @@ import ClientConnection from './client_connection.js';
 
 const EventEmitter = require('events'),
 	webrtc = require('wrtc'),
-	WebSocket = require('ws');
+	WebSocket = require('ws'),
+	cookie = require('cookie');
 
 export default class Slave extends EventEmitter {
-	constructor(wsUrl, userData) {
+	constructor(wsUrl, userData, authData) {
 		super();
 
-		this.ws = new WebSocket(wsUrl + '/enslavism/slaves');
+		// ugly hack until this gets merged: https://github.com/jshttp/cookie/pull/47
+		let cookieStr = '';
+		if (authData !== undefined) {
+			let keys = Object.keys(authData);
+			for (let [i, key] of keys.entries()) {
+				cookieStr += cookie.serialize(key, authData[key]);
+				if (i !== keys.length -1) cookieStr += '; ';
+			}
+		}
+
+		this.ws = new WebSocket(wsUrl + '/enslavism/slaves', cookieStr === '' ? undefined : {
+			headers: {
+				'Cookie': cookieStr
+			}
+		});
 		this.connections = [];
 
 		this.ws.on('open', () => {
