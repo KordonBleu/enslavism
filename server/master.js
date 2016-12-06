@@ -81,7 +81,7 @@ export default class Master extends EventEmitter {
 			verifyClient: (info, cb) => {
 				let accept = true,
 					reason;
-				this.emit('slave', cookie.parse(info.req.headers.cookie), (rejectionReason) => {
+				this.emit('slaveauth', cookie.parse(info.req.headers.cookie), (rejectionReason) => {
 					reason = rejectionReason;
 					accept = false;
 				});
@@ -92,7 +92,21 @@ export default class Master extends EventEmitter {
 		});
 		this._slavesSocket.currentId = 0;
 		this._slavesSocket.wrapMode = false;
-		this._clientsSocket = new WebSocketServer({server: this._httpServer, path: '/enslavism/clients'});
+		this._clientsSocket = new WebSocketServer({
+			server: this._httpServer,
+			path: '/enslavism/clients',
+			verifyClient: (info, cb) => {
+				let accept = true,
+					reason;
+				this.emit('clientauth', cookie.parse(info.req.headers.cookie), (rejectionReason) => {
+					reason = rejectionReason;
+					accept = false;
+				});
+
+				if (accept === true) cb(true);
+				else cb(false, 401, reason);
+			}
+		});
 		this._clientsSocket.currentId = 0;
 		this._clientsSocket.wrapMode = false;
 

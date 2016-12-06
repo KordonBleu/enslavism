@@ -11,7 +11,7 @@ Basically, you have:
     * synchronises the slave list across all clients
 * slaves (Node.js)
     * where you handle the business logic of your application (ex: game server)
-    * gets WebRTC connction requests from client (that you can reject)
+    * gets WebRTC connection requests from client (that you can reject)
 * clients (browser)
     * may request a WebRTC connection to a slave in the slave list
 
@@ -68,7 +68,7 @@ An array of received slaves.
 Triggered when a new slave is received.
 
 ```javascript
-masterCon.addEventListener('slave', slaveCo => { // triggered when a new slave is received
+masterCon.addEventListener('slave', slaveCo => {
 	console.log('new slave', slaveCo);
 });
 ```
@@ -92,7 +92,7 @@ Connect to a slave.
 #### slaveConnection.createDataChannel(dataChannelName)
 
 Create a new data channel. Returns a Promise that resolves with the data channel.
-If the `slaveConnection.connect()` has not been run, it will automatically be, but connecting in advance can speed up the process.
+Will connect the client if it isn't yet. As connecting takes time, if you are able to anticipate a connection but not which data channel to open, you can call [`slaveConnection.connect()`](#slaveconnectionconnect) before.
 
 ```javascript
 slaveCo.createDataChannel('test').then(dc => {
@@ -129,19 +129,35 @@ myServer.listen(8081);
 let myMaster = new Master(myServer);
 ```
 
-#### Event: 'slave'
+#### Event: 'slaveauth'
 
 * `authData`: Object
 * `reject`: Function
 
 Triggered when a slave wants to connect.
-If reject is called, the connection will be rejected. Reject accepts a string as an optional which is the reason the connection was rejected.
+By default, the connection is accepted. If `reject` is called, the connection will be rejected. `reject` accepts a string as an optional argument which is the reason the connection was rejected.
 
 `authData` is the data provided in the [slave constructor](#new-enslavismslavemasterwsurl-userdata-authdata).
 
 ```javascript
-myMaster.on('slave', (authData, reject) => {
+myMaster.on('slaveauth', (authData, reject) => {
 	if (authData.username !== 'getkey' || authData.password !== 'secret') reject('Invalid credentials!');
+});
+```
+
+#### Event: 'clientauth'
+
+* `authData`: Object
+* `reject`: Function
+
+Triggered when a client wants to connect.
+By default, the connection is accepted. If `reject` is called, the connection will be rejected. `reject` accepts a string as an optional argument which is the reason the connection was rejected.
+
+`authData` is an object containing the cookies set by the client.
+
+```javascript
+masterServer2.on('clientauth', (authData, reject) => {
+	if (authData.username !== undefined) console.log(authData.username + " wants to connect!");
 });
 ```
 
@@ -150,8 +166,8 @@ myMaster.on('slave', (authData, reject) => {
 
 #### new enslavism.Slave(masterWsUrl, userData, [authData])
 
-`userData` will be available to all clients and can contain whatever you want.
-The optional argument `authData` in an object containing strings. It may be used to [autentificate slaves](#event-slave).
+`userData` will be available to all clients and can contain any JavaScript value.
+The optional argument `authData` in an object containing strings. It may be used to [authenticate slaves](#event-slaveauth).
 
 ```javascript
 let slave = new enslavism.Slave('ws://localhost:8081', {

@@ -14,6 +14,10 @@ var httpServer = http.createServer((req, res) => {
 });
 httpServer.listen(8081);
 var masterServer2 = new enslavism.Master(httpServer);
-masterServer2.on('slave', (authData, reject) => {
+masterServer2.on('slaveauth', (authData, reject) => {
 	if (authData.username !== 'getkey' || authData.password !== 'secret') reject('Invalid credentials!');
+});
+masterServer2.on('clientauth', (authData, reject) => {
+	reject();
+	if (authData.username !== undefined) console.log(authData.username + ' wants to connect!');
 });

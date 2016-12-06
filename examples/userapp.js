@@ -1,3 +1,5 @@
+document.cookie = 'username=getkey';
+
 let masterCon = new MasterConnection('ws://localhost:8081');
 
 masterCon.addEventListener('slave', slaveCo => {
