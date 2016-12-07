@@ -41,30 +41,59 @@ export default class Master extends EventEmitter {
 	constructor(server) {
 		super();
 
+		function sendSource(res) {
+			res.writeHead(200, {'Content-Type': 'application/javascript'});
+			generateClientSource().then(source => {
+				res.end(source.code);
+			}).catch(console.error);
+		}
+
+		// fat arrow function needed for lexical scoping
+		const makeWsSrv = (httpSrv, type) => {
+			let wsSrv = new WebSocketServer({
+				server: httpSrv,
+				path: '/enslavism/' + type + 's',
+				verifyClient: (info, cb) => {
+					let accept = true,
+						reason;
+					this.emit(type + 'auth', cookie.parse(info.req.headers.cookie), (rejectionReason) => {
+						reason = rejectionReason;
+						accept = false;
+					});
+
+					if (accept === true) cb(true);
+					else cb(false, 401, reason);
+				}
+			});
+
+			wsSrv.currentId = 0;
+			wsSrv.wrapMode = false;
+			wsSrv.on('error', err => {
+				this.emit('error', err);
+			});
+
+			return wsSrv;
+		};
+
+
 		if (typeof server === 'number') {
 			this._httpServer = http.createServer((req, res) => {
-				if (req.url === '/enslavism/client.js') {
-					res.writeHead(200, {'Content-Type': 'application/javascript'});
-					generateClientSource().then(source => {
-						res.end(source.code);
-					});
-				} else {
+				if (req.url === '/enslavism/client.js') sendSource(res);
+				else {
 					res.writeHead(404);
 					res.end('404\nNot found');
 				}
 			});
+
 			this._httpServer.listen(server);
 		} else {
 			let userDefReqListeners = server.listeners('request');
 
 			server.removeAllListeners('request');
+
 			server.on('request', (req, res) => {
-				if (req.url === '/enslavism/client.js') {
-					res.writeHead(200, {'Content-Type': 'application/javascript'});
-					generateClientSource().then(source => {
-						res.end(source.code);
-					}).catch(console.error);
-				} else {
+				if (req.url === '/enslavism/client.js') sendSource(res);
+				else {
 					for (let listener of userDefReqListeners) {
 						listener.call(server, req, res);
 					}
@@ -75,40 +104,9 @@ export default class Master extends EventEmitter {
 		}
 
 
-		this._slavesSocket = new WebSocketServer({
-			server: this._httpServer,
-			path: '/enslavism/slaves',
-			verifyClient: (info, cb) => {
-				let accept = true,
-					reason;
-				this.emit('slaveauth', cookie.parse(info.req.headers.cookie), (rejectionReason) => {
-					reason = rejectionReason;
-					accept = false;
-				});
+		this._slavesSocket = makeWsSrv(this._httpServer, 'slave');
+		this._clientsSocket = makeWsSrv(this._httpServer, 'client');
 
-				if (accept === true) cb(true);
-				else cb(false, 401, reason);
-			}
-		});
-		this._slavesSocket.currentId = 0;
-		this._slavesSocket.wrapMode = false;
-		this._clientsSocket = new WebSocketServer({
-			server: this._httpServer,
-			path: '/enslavism/clients',
-			verifyClient: (info, cb) => {
-				let accept = true,
-					reason;
-				this.emit('clientauth', cookie.parse(info.req.headers.cookie), (rejectionReason) => {
-					reason = rejectionReason;
-					accept = false;
-				});
-
-				if (accept === true) cb(true);
-				else cb(false, 401, reason);
-			}
-		});
-		this._clientsSocket.currentId = 0;
-		this._clientsSocket.wrapMode = false;
 
 		this._slavesSocket.on('connection', ws => {
 			console.log('new slave');

@@ -1,5 +1,7 @@
 # Enslavism
 
+[![npm version](https://badge.fury.io/js/enslavism.svg)](https://www.npmjs.com/package/enslavism)
+
 A framework to manage distributed WebRTC servers that communicate with browser clients.
 
 It has been created to be used by [JumpSuit](https://github.com/KordonBleu/jumpsuit). It is generally great for web-based games, but I am sure you will find other uses.
@@ -156,8 +158,21 @@ By default, the connection is accepted. If `reject` is called, the connection wi
 `authData` is an object containing the cookies set by the client.
 
 ```javascript
-masterServer2.on('clientauth', (authData, reject) => {
+myServer.on('clientauth', (authData, reject) => {
 	if (authData.username !== undefined) console.log(authData.username + " wants to connect!");
+});
+```
+
+
+#### Event: 'error'
+
+* `err`: Error
+
+Triggered when an error occurs on the underlying server.
+
+```javascript
+myServer.on('error', err => {
+	console.log(err);
 });
 ```
 
