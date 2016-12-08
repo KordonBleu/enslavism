@@ -55,8 +55,9 @@ export default class Master extends EventEmitter {
 				path: '/enslavism/' + type + 's',
 				verifyClient: (info, cb) => {
 					let accept = true,
-						reason;
-					this.emit(type + 'auth', cookie.parse(info.req.headers.cookie), (rejectionReason) => {
+						reason,
+						authData = info.req.headers.cookie === undefined ? {} : cookie.parse(info.req.headers.cookie);
+					this.emit(type + 'auth', authData, (rejectionReason) => {
 						reason = rejectionReason;
 						accept = false;
 					});
