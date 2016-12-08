@@ -34,5 +34,3 @@ export default class ClientConnection extends EventEmitter {
 		}).catch(console.error);
 	}
 }
-
-
