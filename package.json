@@ -1,6 +1,6 @@
 {
   "name": "enslavism",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "description": "Framework to manage distributed WebRTC servers that communicate with browser clients",
   "main": "bundle.js",
   "repository": {

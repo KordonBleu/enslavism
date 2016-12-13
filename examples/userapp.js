@@ -2,7 +2,7 @@ document.cookie = 'username=getkey';
 
 let masterCon = new MasterConnection('ws://localhost:8081');
 
-masterCon.addEventListener('slave', slaveCo => {
+masterCon.addEventListener('slaveadded', slaveCo => {
 	console.log('new slave', slaveCo);
 
 	// this is optional, but connecting takes time so you should do it as soon as possible, before opening data channels if you can
@@ -20,4 +20,10 @@ masterCon.addEventListener('slave', slaveCo => {
 	slaveCo.addEventListener('rejected', () => {
 		console.log('The slave has rejected the connection :-(');
 	});
+});
+
+masterCon.addEventListener('slaveremoved', slaveCo => {
+	console.log('slave has been removed', slaveCo);
+	console.log('here was its id', slaveCo.id);
+	console.log('here was its userData', slaveCo.userData);
 });

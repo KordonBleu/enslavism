@@ -63,15 +63,29 @@ let masterCon = new MasterConnection('ws://localhost:8081');
 
 An array of received slaves.
 
-#### Event: 'slave'
+#### Event: 'slaveadded'
 
 * `slaveCo`: SlaveConnection
 
-Triggered when a new slave is received.
+Triggered when a new slave is received. The slave will be available in the [slave list](#masterconnectionslaves).
 
 ```javascript
-masterCon.addEventListener('slave', slaveCo => {
+masterCon.addEventListener('slaveadded', slaveCo => {
 	console.log('new slave', slaveCo);
+});
+```
+
+#### Event: 'slaveremoved'
+
+* `slaveCo`: SlaveConnection
+
+Triggered when a slave is removed from the slave list. Calling any of `slaveCo`'s methods won't work.
+
+```javascript
+masterCon.addEventListener('slaveremoved', slaveCo => {
+	console.log('slave has been removed', slaveCo);
+	console.log('here was its id', slaveCo.id);
+	console.log('here was its userData', slaveCo.userData);
 });
 ```
 

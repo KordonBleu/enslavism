@@ -21,13 +21,14 @@ export default class MasterConnection extends EventEmitter {
 						let slaveCo = new SlaveConnection(id, userData, this);
 
 						this.slaves[id] = slaveCo;
-						this.emit('slave', slaveCo);
+						this.emit('slaveadded', slaveCo);
 					}
 					break;
 				}
 				case proto.removeSlaves: {
 					for (let rmId of proto.removeSlaves.deserialize(msg.data)) {
 						this.slaves[rmId].close();
+						this.emit('slaveremoved', this.slaves[rmId]);
 						delete this.slaves[rmId];
 					}
 					break;
