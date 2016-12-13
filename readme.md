@@ -13,7 +13,7 @@ Basically, you have:
     * synchronises the slave list across all clients
 * slaves (Node.js)
     * where you handle the business logic of your application (ex: game server)
-    * gets WebRTC connection requests from client (that you can reject)
+    * gets WebRTC connection requests from client
 * clients (browser)
     * may request a WebRTC connection to a slave in the slave list
 
@@ -105,7 +105,7 @@ slaveCo.addEventListener('rejected', () => {
 
 Connect to a slave.
 
-#### slaveConnection.createDataChannel(dataChannelName)
+#### slaveConnection.createDataChannel(dataChannelName, [dcOptions])
 
 Create a new data channel. Returns a Promise that resolves with the data channel.
 Will connect the client if it isn't yet. As connecting takes time, if you are able to anticipate a connection but not which data channel to open, you can call [`slaveConnection.connect()`](#slaveconnectionconnect) before.
@@ -118,6 +118,9 @@ slaveCo.createDataChannel('test').then(dc => {
 	dc.send('What have I wrought!');
 });
 ```
+
+`dcOptions` is an `Object` which can contain the [following properties](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createDataChannel#RTCDataChannelInit_dictionary).
+The `ordered` property is known to work. You might want to check out [this upstream issue](https://github.com/js-platform/node-webrtc/issues/273) regarding the other properties.
 
 ## Node.js API
 

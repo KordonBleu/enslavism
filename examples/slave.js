@@ -23,7 +23,7 @@ slave.on('connection', clCo => {
 			dc.send('hallo welt');
 		});
 		dc.addEventListener('message', msg => {
-			console.log(msg);
+			console.log(msg.data);
 		});
 	});
 });

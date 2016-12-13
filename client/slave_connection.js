@@ -25,12 +25,12 @@ export default class SlaveConnection extends EventEmitter {
 	close() {
 		if (this.slaveCon !== undefined) this.slaveCon.close();
 	}
-	createDataChannel(dcName) {
+	createDataChannel(dcName, dcConfig) {
 		return new Promise((resolve, reject) => {
 			if (this.slaveCon === undefined) this.connect();
 			let dc;
 			try {
-				dc = this.slaveCon.createDataChannel(dcName);
+				dc = this.slaveCon.createDataChannel(dcName, dcConfig);
 			} catch(err) {
 				reject(err);
 			}

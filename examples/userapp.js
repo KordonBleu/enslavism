@@ -9,8 +9,8 @@ masterCon.addEventListener('slaveadded', slaveCo => {
 	// slaveCo.connect();
 	// in this example doing it won't make things faster
 
-	slaveCo.createDataChannel('test') // if you are not connected this will do it automatically
-	.then(dc => {
+	 // if you are not connected this will connect to the slave before creating the data channel
+	slaveCo.createDataChannel('test').then(dc => {
 		dc.addEventListener('message', msg => {
 			console.log(msg);
 		});
