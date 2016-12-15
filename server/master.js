@@ -49,7 +49,7 @@ export default class Master extends EventEmitter {
 		}
 
 		// fat arrow function needed for lexical scoping
-		const makeWsSrv = (httpSrv, type) => {
+		const wsSrvFactory = (httpSrv, type) => {
 			let wsSrv = new WebSocketServer({
 				server: httpSrv,
 				path: '/enslavism/' + type + 's',
@@ -71,6 +71,9 @@ export default class Master extends EventEmitter {
 			wsSrv.wrapMode = false;
 			wsSrv.on('error', err => {
 				this.emit('error', err);
+			});
+			wsSrv.on('connection', ws => {
+				this.emit(type + 'connection', ws);
 			});
 
 			return wsSrv;
@@ -105,12 +108,11 @@ export default class Master extends EventEmitter {
 		}
 
 
-		this._slavesSocket = makeWsSrv(this._httpServer, 'slave');
-		this._clientsSocket = makeWsSrv(this._httpServer, 'client');
+		this._slavesSocket = wsSrvFactory(this._httpServer, 'slave');
+		this._clientsSocket = wsSrvFactory(this._httpServer, 'client');
 
 
 		this._slavesSocket.on('connection', ws => {
-			console.log('new slave');
 			ws.id = this.giveId(this._slavesSocket);
 
 			ws.on('message', msg => {
@@ -162,7 +164,6 @@ export default class Master extends EventEmitter {
 		this._clientsSocket.on('connection', ws => {
 			ws.id = this.giveId(this._clientsSocket);
 
-			console.log('client connected');
 			ws.send(proto.addSlaves.serialize(this._slavesSocket.clients));
 
 			ws.on('message', msg => {

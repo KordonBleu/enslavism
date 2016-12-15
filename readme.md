@@ -122,6 +122,7 @@ slaveCo.createDataChannel('test').then(dc => {
 `dcOptions` is an `Object` which can contain the [following properties](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createDataChannel#RTCDataChannelInit_dictionary).
 The `ordered` property is known to work. You might want to check out [this upstream issue](https://github.com/js-platform/node-webrtc/issues/273) regarding the other properties.
 
+
 ## Node.js API
 
 ### Class: enslavism.Master
@@ -175,11 +176,34 @@ By default, the connection is accepted. If `reject` is called, the connection wi
 `authData` is an object containing the cookies set by the client.
 
 ```javascript
-myServer.on('clientauth', (authData, reject) => {
+myMaster.on('clientauth', (authData, reject) => {
 	if (authData.username !== undefined) console.log(authData.username + " wants to connect!");
 });
 ```
 
+#### Event: 'slaveconnection'
+
+* `ws`: [WebSocket](https://github.com/websockets/ws/blob/master/doc/ws.md#class-websocket)
+
+Triggered once a slave is connected.
+
+```javascript
+myMaster.on('slaveconnection', ws => {
+	console.log('Slave connected @', ws._socket.remoteAddress);
+});
+```
+
+#### Event: 'clientconnection'
+
+* `ws`: [WebSocket](https://github.com/websockets/ws/blob/master/doc/ws.md#class-websocket)
+
+Triggered once a client is connected.
+
+```javascript
+myMaster.on('clientconnection', ws => {
+	console.log('Client connected @', ws._socket.remoteAddress);
+});
+```
 
 #### Event: 'error'
 
@@ -188,7 +212,7 @@ myServer.on('clientauth', (authData, reject) => {
 Triggered when an error occurs on the underlying server.
 
 ```javascript
-myServer.on('error', err => {
+myMaster.on('error', err => {
 	console.log(err);
 });
 ```
@@ -238,6 +262,7 @@ slave.on('connection', clientCo => {
 	console.log(clientCo);
 });
 ```
+
 
 ### Class: enslavism.ClientConnection
 

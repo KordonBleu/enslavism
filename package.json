@@ -1,6 +1,6 @@
 {
   "name": "enslavism",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Framework to manage distributed WebRTC servers that communicate with browser clients",
   "main": "bundle.js",
   "repository": {
@@ -13,14 +13,14 @@
   },
   "homepage": "https://github.com/KordonBleu/enslavism",
   "keywords": [
-    "enslavism",
+    "webrtc",
+    "distributed",
     "master",
     "master server",
     "slave",
-    "game",
-    "webrtc",
     "datachannel",
-    "data channel"
+    "data channel",
+    "game"
   ],
   "dependencies": {
     "wrtc": "0.0.x",
