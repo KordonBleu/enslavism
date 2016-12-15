@@ -11,9 +11,9 @@ rollup.rollup({
 		eslint()
 	]
 }).then(bundle => {
-	console.log('bundle generated');
 	bundle.write({
 		format: 'cjs',
 		dest: 'bundle.js'
 	});
+	console.log('Enslavism bundle generated');
 });

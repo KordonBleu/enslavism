@@ -28,9 +28,6 @@ export default class Slave extends EventEmitter {
 		});
 		this.connections = [];
 
-		this.ws.on('open', () => {
-			this.ws.send(proto.register.serialize(userData));
-		});
 		this.ws.on('message', msg => {
 			msg = convert.bufferToArrayBuffer(msg);
 			switch (proto.getSerializator(msg)) {
@@ -61,6 +58,15 @@ export default class Slave extends EventEmitter {
 					break;
 				}
 			}
+		});
+		return new Promise((resolve, reject) => {
+			this.ws.on('open', () => {
+				this.ws.send(proto.register.serialize(userData));
+				resolve(this);
+			});
+			this.ws.on('error', err => {
+				reject(err);
+			});
 		});
 	}
 	findClient(id) { // get client corresponding to this id

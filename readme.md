@@ -198,13 +198,19 @@ myServer.on('error', err => {
 
 #### new enslavism.Slave(masterWsUrl, userData, [authData])
 
+Returns a **promise** that resolves with an [`enslavism.Slave`](#class-enslavismslave).
+
 `userData` will be available to all clients and can contain any JavaScript value.
 The optional argument `authData` in an object containing strings. It may be used to [authenticate slaves](#event-slaveauth).
 
 ```javascript
-let slave = new enslavism.Slave('ws://localhost:8081', {
+new enslavism.Slave('ws://localhost:8081', {
 	name: 'my slave server',
 	connectedAmount: 16
+}).then(slave => {
+	console.log('Succesfully connected to the master:', slave);
+}).catch(err => {
+	console.log('Couldn\'t connect to the master:', err);
 });
 ```
 
