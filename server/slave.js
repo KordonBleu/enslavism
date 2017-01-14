@@ -3,7 +3,7 @@ import * as convert from './convert.js';
 import ClientConnection from './client_connection.js';
 
 const EventEmitter = require('events'),
-	webrtc = require('wrtc'),
+	webrtc = require('electron-webrtc')(),
 	WebSocket = require('ws'),
 	cookie = require('cookie');
 
@@ -50,8 +50,7 @@ export default class Slave extends EventEmitter {
 					let {id, sdpMid, sdpMLineIndex, candidate} = proto.iceCandidateFromClient.deserialize(msg);
 					let receiver = this.findClient(id);
 					if (receiver !== undefined) {
-						receiver.clientCon.addIceCandidate(new webrtc.RTCIceCandidate({candidate, sdpMid, sdpMLineIndex}))
-						.catch(e => {
+						receiver.clientCon.addIceCandidate(new webrtc.RTCIceCandidate({candidate, sdpMid, sdpMLineIndex})).catch(e => {
 							console.error('adding ICE candidate: failure', e, id, sdpMid, sdpMLineIndex, candidate);
 						});
 					}

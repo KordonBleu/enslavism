@@ -23,7 +23,7 @@
     "game"
   ],
   "dependencies": {
-    "wrtc": "0.0.x",
+    "electron-webrtc": "0.2.x",
     "ws": "1.x",
     "ipaddr.js": "1.x",
     "cookie": "0.x",

@@ -18,11 +18,11 @@ new enslavism.Slave('ws://localhost:8081', {
 	slave.on('connection', clCo => {
 		clCo.on('datachannel', dc => {
 			console.log('new dataChannel');
-			dc.addEventListener('open', ev => {
+			dc.on('open', ev => {
 				console.log('data channel open', ev);
 				dc.send('hallo welt');
 			});
-			dc.addEventListener('message', msg => {
+			dc.on('message', msg => {
 				console.log('Received message:', msg.data);
 			});
 		});

@@ -20,19 +20,21 @@ Basically, you have:
 
 ## The point
 
-* transmiting encrypted data without having to register a SSL certificate (unlike secure WebSockets)
+* transmitting encrypted data without having to register a SSL certificate (unlike secure WebSockets)
 * configurable reliability (unreliable is fast!)
 * configurable delivery ordering (unordered is fast!)
 * an architecture that allows browser clients to choose which independent server to connect to (useful for games)
 
 
-## Examples
+## Try the examples
 
 ```sh
 $ npm install
 $ node example/master.js
 $ node example/slave.js # in a different terminal
 ```
+
+Enslavism depends [on](https://github.com/mappum/electron-webrtc/pull/91) [patches](https://github.com/mappum/electron-webrtc/pull/92) that aren't yet merged into [electron-webrtc](https://github.com/mappum/electron-webrtc).
 
 Now open your browser at `http://localhost:8081/`.
 
@@ -276,11 +278,11 @@ Triggered each time a client creates a datachannel.
 clientCo.on('datachannel', dc => {
 	console.log('new dataChannel', dc);
 
-	dc.addEventListener('open', ev => { // triggered once the datachannel is open
+	dc.on('open', ev => { // triggered once the datachannel is open
 		console.log('data channel open', ev);
 		dc.send('hallo welt');
 	});
-	dc.addEventListener('message', msg => { // triggered when receiving a message from a client
+	dc.on('message', msg => { // triggered when receiving a message from a client
 		console.log(msg);
 	});
 });
