@@ -1,7 +1,7 @@
 import * as proto from '../shared/proto.js';
 
 const EventEmitter = require('events'),
-	webrtc = require('electron-webrtc')();
+	webrtc = require('electron-webrtc-patched')();
 
 export default class ClientConnection extends EventEmitter {
 	constructor(id, sdp, slave) {

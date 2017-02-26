@@ -1,6 +1,6 @@
 {
   "name": "enslavism",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Framework to manage distributed WebRTC servers that communicate with browser clients",
   "main": "bundle.js",
   "repository": {
@@ -23,7 +23,7 @@
     "game"
   ],
   "dependencies": {
-    "electron-webrtc": "0.2.x",
+    "electron-webrtc-patched": "0.3.x",
     "ws": "1.x",
     "ipaddr.js": "1.x",
     "cookie": "0.x",

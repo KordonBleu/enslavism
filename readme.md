@@ -34,8 +34,6 @@ $ node example/master.js
 $ node example/slave.js # in a different terminal
 ```
 
-Enslavism depends [on](https://github.com/mappum/electron-webrtc/pull/91) [patches](https://github.com/mappum/electron-webrtc/pull/92) that aren't yet merged into [electron-webrtc](https://github.com/mappum/electron-webrtc).
-
 Now open your browser at `http://localhost:8081/`.
 
 
