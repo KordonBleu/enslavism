@@ -17,6 +17,8 @@ Basically, you have:
 * clients (browser)
     * may request a WebRTC connection to a slave in the slave list
 
+I recommend reading [this blog article](https://getkey.eu/blog/5862b0cf/webrtc:-the-future-of-web-games) to understand the motivation behind Enslavism.
+
 
 ## The point
 

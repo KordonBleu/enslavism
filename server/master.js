@@ -1,5 +1,6 @@
 import * as proto from '../shared/proto.js';
 import * as convert from './convert.js';
+import SocketList from './socket_list.js';
 
 const EventEmitter = require('events'),
 	http = require('http'),
@@ -7,8 +8,7 @@ const EventEmitter = require('events'),
 	WebSocketServer = require('ws').Server,
 	cookie = require('cookie'),
 	rollup = require('rollup'),
-	alias = require('rollup-plugin-alias'),
-	MAX_UINT32 = Math.pow(2, 32) - 1;
+	alias = require('rollup-plugin-alias');
 
 let clientSource = null;
 function generateClientSource() {
@@ -42,6 +42,9 @@ export default class Master extends EventEmitter {
 	constructor(server) {
 		super();
 
+		this._slaves = new SocketList();
+		this._clients = new SocketList();
+
 		function sendSource(res) {
 			res.writeHead(200, {'Content-Type': 'application/javascript'});
 			generateClientSource().then(source => {
@@ -52,7 +55,6 @@ export default class Master extends EventEmitter {
 		// fat arrow function needed for lexical scoping
 		const wsSrvFactory = type => {
 			let wsSrv = new WebSocketServer({
-				clientTracking: true,
 				noServer: true,
 				verifyClient: (info, cb) => {
 					let accept = true,
@@ -130,7 +132,7 @@ export default class Master extends EventEmitter {
 		});
 
 		this._slavesSocket.on('connection', ws => {
-			ws.id = this.giveId(this._slavesSocket);
+			let id = this._slaves.add(ws);
 
 			ws.on('message', msg => {
 				msg = convert.bufferToArrayBuffer(msg);
@@ -147,7 +149,7 @@ export default class Master extends EventEmitter {
 					case proto.answerToClient: {
 						let receiver = this.findClient(proto.answerToClient.getDestId(msg));
 						if (receiver !== undefined) {
-							proto.answerFromSlave.setDestId(msg, ws.id);
+							proto.answerFromSlave.setDestId(msg, id);
 							receiver.send(msg);
 						}
 						break;
@@ -155,7 +157,7 @@ export default class Master extends EventEmitter {
 					case proto.iceCandidateToClient: {
 						let receiver = this.findClient(proto.iceCandidateToClient.getDestId(msg));
 						if (receiver !== undefined) {
-							proto.iceCandidateFromSlave.setDestId(msg, ws.id);
+							proto.iceCandidateFromSlave.setDestId(msg, id);
 							receiver.send(msg);
 						}
 						break;
@@ -163,7 +165,7 @@ export default class Master extends EventEmitter {
 					case proto.rejectToClient: {
 						let receiver = this.findClient(proto.rejectToClient.deserialize(msg));
 						if (receiver !== undefined) {
-							receiver.send(proto.rejectFromSlave.serialize(ws.id));
+							receiver.send(proto.rejectFromSlave.serialize(id));
 						}
 						break;
 					}
@@ -171,15 +173,16 @@ export default class Master extends EventEmitter {
 				}
 			});
 			ws.on('close', () => {
-				let removeSlaveBuf = proto.removeSlaves.serialize([ws.id]);
+				let removeSlaveBuf = proto.removeSlaves.serialize([id]);
 				for (let client of this._clientsSocket.clients) {
 					client.send(removeSlaveBuf);
 				}
+				this._slaves.delete(id);
 			});
 		});
 
 		this._clientsSocket.on('connection', ws => {
-			ws.id = this.giveId(this._clientsSocket);
+			let id = this._clients.add(ws);
 
 			ws.send(proto.addSlaves.serialize(this._slavesSocket.clients));
 
@@ -190,7 +193,7 @@ export default class Master extends EventEmitter {
 					case proto.offerToSlave: {
 						let receiver = this.findSlave(proto.offerFromClient.getDestId(msg));
 						if (receiver !== undefined) {
-							proto.offerFromClient.setDestId(msg, ws.id);
+							proto.offerFromClient.setDestId(msg, id);
 							receiver.send(msg);
 						}
 						break;
@@ -198,39 +201,22 @@ export default class Master extends EventEmitter {
 					case proto.iceCandidateToSlave: {
 						let receiver = this.findSlave(proto.iceCandidateToSlave.getDestId(msg));
 						if (receiver !== undefined) {
-							proto.iceCandidateFromClient.setDestId(msg, ws.id);
+							proto.iceCandidateFromClient.setDestId(msg, id);
 							receiver.send(msg);
 						}
 						break;
 					}
 				}
 			});
+			ws.on('close', () => {
+				this._clients.delete(id);
+			});
 		});
 	}
 	findSlave(id) { // get slave corresponding to this id
-		// TODO: rewrite this using a map
-		for (let slave of this._slavesSocket.clients) {
-			if (slave.id === id) return slave;
-		}
+		return this._slaves.find(id);
 	}
 	findClient(id) { // get client corresponding to this id
-		// TODO: rewrite this using a map
-		for (let client of this._clientsSocket.clients) {
-			if (client.id === id) return client;
-		}
-	}
-	giveId(wss) {
-		if (wss.currentId > MAX_UINT32) {
-			wss.currentId = 0;
-			wss.wrapMode = true;
-		}
-		if (wss.wrapMode) {
-			// since the maximum size of an array is 2^32 - 1
-			// that means that if the server has be able to add an object to wss.clients, there is at least an id available for it
-			while (wss.currentId <= MAX_UINT32 && wss.clients.find((client) => {
-				return client.id === wss.currentId;
-			}) !== undefined) ++wss.currentId;
-		}
-		return wss.currentId++;
+		return this._clients.find(id);
 	}
 }
