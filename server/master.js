@@ -3,6 +3,7 @@ import * as convert from './convert.js';
 
 const EventEmitter = require('events'),
 	http = require('http'),
+	url = require('url'),
 	WebSocketServer = require('ws').Server,
 	cookie = require('cookie'),
 	rollup = require('rollup'),
@@ -49,10 +50,10 @@ export default class Master extends EventEmitter {
 		}
 
 		// fat arrow function needed for lexical scoping
-		const wsSrvFactory = (httpSrv, type) => {
+		const wsSrvFactory = type => {
 			let wsSrv = new WebSocketServer({
-				server: httpSrv,
-				path: '/enslavism/' + type + 's',
+				clientTracking: true,
+				noServer: true,
 				verifyClient: (info, cb) => {
 					let accept = true,
 						reason,
@@ -108,9 +109,25 @@ export default class Master extends EventEmitter {
 		}
 
 
-		this._slavesSocket = wsSrvFactory(this._httpServer, 'slave');
-		this._clientsSocket = wsSrvFactory(this._httpServer, 'client');
+		this._slavesSocket = wsSrvFactory('slave');
+		this._clientsSocket = wsSrvFactory('client');
 
+		this._httpServer.on('upgrade', (request, socket, head) => {
+			// see https://github.com/websockets/ws/pull/885
+			const pathname = url.parse(request.url).pathname;
+
+			if (pathname === '/enslavism/slaves') {
+				this._slavesSocket.handleUpgrade(request, socket, head, ws => {
+					this._slavesSocket.emit('connection', ws);
+				});
+			} else if (pathname === '/enslavism/clients') {
+				this._clientsSocket.handleUpgrade(request, socket, head, ws => {
+					this._clientsSocket.emit('connection', ws);
+				});
+			} else {
+				socket.destroy();
+			}
+		});
 
 		this._slavesSocket.on('connection', ws => {
 			ws.id = this.giveId(this._slavesSocket);
@@ -191,14 +208,16 @@ export default class Master extends EventEmitter {
 		});
 	}
 	findSlave(id) { // get slave corresponding to this id
-		return this._slavesSocket.clients.find(slave => {
-			return slave.id === id;
-		});
+		// TODO: rewrite this using a map
+		for (let slave of this._slavesSocket.clients) {
+			if (slave.id === id) return slave;
+		}
 	}
 	findClient(id) { // get client corresponding to this id
-		return this._clientsSocket.clients.find(client => {
-			return client.id === id;
-		});
+		// TODO: rewrite this using a map
+		for (let client of this._clientsSocket.clients) {
+			if (client.id === id) return client;
+		}
 	}
 	giveId(wss) {
 		if (wss.currentId > MAX_UINT32) {

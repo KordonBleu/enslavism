@@ -46,12 +46,18 @@ class AddSlavesSerializator extends Serializator {
 			offset = 1;
 
 		dView.setUint8(0, this.type);
-		for (let [i, userDataBuf] of userDataBufs.entries()) {
-			dView.setUint32(offset, slaves[i].id);
+
+		let i = 0;
+		for (let slave of slaves) {
+			let userDataBuf = userDataBufs[i];
+
+			dView.setUint32(offset, slave.id);
 			dView.setUint16(offset + 4, userDataBuf.byteLength);
 			aView.set(new Uint8Array(userDataBuf), offset + 6);
 
 			offset += 6 + userDataBuf.byteLength;
+
+			++i;
 		}
 
 		return aView.buffer;

@@ -1,6 +1,6 @@
 {
   "name": "enslavism",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Framework to manage distributed WebRTC servers that communicate with browser clients",
   "main": "bundle.js",
   "repository": {
@@ -24,7 +24,7 @@
   ],
   "dependencies": {
     "electron-webrtc-patched": "0.3.x",
-    "ws": "1.x",
+    "ws": "2.x",
     "ipaddr.js": "1.x",
     "cookie": "0.x",
     "rollup": "0.x",
@@ -32,8 +32,8 @@
     "rollup-plugin-eslint": "3.x"
   },
   "optionalDependencies": {
-    "bufferutil": "1.x",
-    "utf-8-validate": "2.x"
+    "bufferutil": "2.x",
+    "utf-8-validate": "3.x"
   },
   "devDependencies": {
     "ava": "0.x",
