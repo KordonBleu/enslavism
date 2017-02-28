@@ -1,4 +1,4 @@
-/* 
+/*
 To drop 10% of packets (as root):
 iptables -A OUTPUT -m statistic --mode random --probability 0.1 -j DROP
 

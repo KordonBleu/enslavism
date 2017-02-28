@@ -3,8 +3,8 @@ import * as proto from '../shared/proto.js';
 
 test('register', t => {
 	let userData = {
-			qwf: "This is",
-			luu: "abritrary data",
+			qwf: 'This is',
+			luu: 'abritrary data',
 			lol: true,
 			integer: 8988798,
 			float: 80.3
@@ -19,22 +19,21 @@ test('register', t => {
 
 test('addSlaves', t => {
 	let slaves = [
-			{
-				id: 666,
-				userData: {
-					stuff: "sfharnehsarne",
-					more: 432
-				}
-			},
-			{
-				id: 42,
-				userData: {
-					welp: "arst",
-					more: null,
-					less: true
-				}
+		{
+			id: 666,
+			userData: {
+				stuff: 'sfharnehsarne',
+				more: 432
 			}
-		],
+		},
+		{
+			id: 42,
+			userData: {
+				welp: 'arst',
+				more: null,
+				less: true
+			}
+		}],
 		buf = proto.addSlaves.serialize(slaves),
 		res = proto.addSlaves.deserialize(buf);
 
@@ -117,9 +116,9 @@ test('answerFromSlave', t => {
 
 
 let candidate = {
-	candidate: "candidate:0 1 UDP 2122252543 192.168.0.22 52840 typ host",
+	candidate: 'candidate:0 1 UDP 2122252543 192.168.0.22 52840 typ host',
 	sdpMLineIndex: 0,
-	sdpMid: "sdparta_0"
+	sdpMid: 'sdparta_0'
 };
 
 test('iceCandidateToSlave', t => {
