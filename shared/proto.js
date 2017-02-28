@@ -35,7 +35,7 @@ class AddSlavesSerializator extends Serializator {
 		let userDataBufs = [],
 			userDataBufsLength = 0;
 
-		for (let slave of slaves) {
+		for (let slave of slaves.values()) {
 			let buf = convert.stringToBuffer(JSON.stringify(slave.userData));
 			userDataBufsLength += buf.byteLength;
 			userDataBufs.push(buf);
@@ -48,10 +48,10 @@ class AddSlavesSerializator extends Serializator {
 		dView.setUint8(0, this.type);
 
 		let i = 0;
-		for (let slave of slaves) {
+		for (let id of slaves.keys()) {
 			let userDataBuf = userDataBufs[i];
 
-			dView.setUint32(offset, slave.id);
+			dView.setUint32(offset, id);
 			dView.setUint16(offset + 4, userDataBuf.byteLength);
 			aView.set(new Uint8Array(userDataBuf), offset + 6);
 

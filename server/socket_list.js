@@ -9,7 +9,6 @@ export default class SocketList {
 	}
 	add(ws) {
 		if (this._currentId > MAX_UINT32) {
-			this.currentId = 0;
 			this.wrapMode = true;
 		}
 		if (this.wrapMode) {
@@ -20,7 +19,7 @@ export default class SocketList {
 			return id;
 		} else {
 			this._idWs.set(this._currentId, ws);
-			return this.currentId++;
+			return this._currentId++;
 		}
 	}
 	delete(id) {
@@ -49,5 +48,8 @@ export default class SocketList {
 	}
 	values() {
 		return this._idWs.values();
+	}
+	keys() {
+		return this._idWs.keys();
 	}
 }

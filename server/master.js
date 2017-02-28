@@ -140,8 +140,16 @@ export default class Master extends EventEmitter {
 				switch (proto.getSerializator(msg)) {
 					case proto.register: {
 						ws.userData = proto.register.deserialize(msg);
-						let newSlaveBuf = proto.addSlaves.serialize([ws]);
-						for (let client of this._clientsSocket.clients) {
+						let newSlaveBuf = proto.addSlaves.serialize({
+							// duck-typing to mock a SocketList
+							values: function*() {
+								yield ws;
+							},
+							keys: function*() {
+								yield id;
+							}
+						});
+						for (let client of this._clients.values()) {
 							client.send(newSlaveBuf);
 						}
 						break;
@@ -174,7 +182,7 @@ export default class Master extends EventEmitter {
 			});
 			ws.on('close', () => {
 				let removeSlaveBuf = proto.removeSlaves.serialize([id]);
-				for (let client of this._clientsSocket.clients) {
+				for (let client of this._clients.values()) {
 					client.send(removeSlaveBuf);
 				}
 				this._slaves.delete(id);
@@ -184,7 +192,7 @@ export default class Master extends EventEmitter {
 		this._clientsSocket.on('connection', ws => {
 			let id = this._clients.add(ws);
 
-			ws.send(proto.addSlaves.serialize(this._slavesSocket.clients));
+			ws.send(proto.addSlaves.serialize(this._slaves));
 
 			ws.on('message', msg => {
 				msg = convert.bufferToArrayBuffer(msg);

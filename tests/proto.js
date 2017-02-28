@@ -18,23 +18,33 @@ test('register', t => {
 });
 
 test('addSlaves', t => {
+	// TODO: use something similar to a SocketList on the client
 	let slaves = [
 		{
-			id: 666,
+			id: 666, // TODO: remove this
 			userData: {
 				stuff: 'sfharnehsarne',
 				more: 432
 			}
 		},
 		{
-			id: 42,
+			id: 42, // TODO: remove this
 			userData: {
 				welp: 'arst',
 				more: null,
 				less: true
 			}
 		}],
-		buf = proto.addSlaves.serialize(slaves),
+		buf = proto.addSlaves.serialize({
+			values: function*() {
+				yield slaves[0];
+				yield slaves[1];
+			},
+			keys: function*() {
+				yield 666;
+				yield 42;
+			}
+		}),
 		res = proto.addSlaves.deserialize(buf);
 
 	t.deepEqual(slaves, res);
