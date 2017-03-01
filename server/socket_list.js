@@ -43,7 +43,7 @@ export default class SocketList {
 			return prevKey + 1;
 		}
 	}
-	*[Symbol.iterator]() {
+	entries() {
 		return this._idWs.entries();
 	}
 	values() {

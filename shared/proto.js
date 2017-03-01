@@ -31,33 +31,28 @@ class AddSlavesSerializator extends Serializator {
 	constructor(type) {
 		super(type);
 	}
-	serialize(slaves) {
-		let userDataBufs = [],
-			userDataBufsLength = 0;
+	serialize(slaveIter) {
+		let userDataBufsLength = 0,
+			userDataBufs = new Map();
 
-		for (let slave of slaves.values()) {
+		for (let [id, slave] of slaveIter) {
 			let buf = convert.stringToBuffer(JSON.stringify(slave.userData));
 			userDataBufsLength += buf.byteLength;
-			userDataBufs.push(buf);
+			userDataBufs.set(id, buf);
 		}
 
-		let aView = new Uint8Array(1 + userDataBufsLength + userDataBufs.length*6),
+		let aView = new Uint8Array(1 + userDataBufsLength + userDataBufs.size*6),
 			dView = new DataView(aView.buffer),
 			offset = 1;
 
 		dView.setUint8(0, this.type);
 
-		let i = 0;
-		for (let id of slaves.keys()) {
-			let userDataBuf = userDataBufs[i];
-
+		for (let [id, userDataBuf] of userDataBufs.entries()) {
 			dView.setUint32(offset, id);
 			dView.setUint16(offset + 4, userDataBuf.byteLength);
 			aView.set(new Uint8Array(userDataBuf), offset + 6);
 
 			offset += 6 + userDataBuf.byteLength;
-
-			++i;
 		}
 
 		return aView.buffer;
@@ -76,7 +71,7 @@ class AddSlavesSerializator extends Serializator {
 			offset += 6 + userDataLength;
 		}
 
-		return slaves;
+		return slaves; // TODO: return an iterator, not an array
 	}
 }
 
