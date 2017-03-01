@@ -17,7 +17,7 @@ export default class MasterConnection extends EventEmitter {
 		this._masterSocket.addEventListener('message', msg => {
 			switch (proto.getSerializator(msg.data)) {
 				case proto.addSlaves: {
-					for (let {id, userData} of proto.addSlaves.deserialize(msg.data)) {
+					for (let [id, { userData }] of proto.addSlaves.deserialize(msg.data)) {
 						let slaveCo = new SlaveConnection(id, userData, this);
 
 						this.slaves[id] = slaveCo;

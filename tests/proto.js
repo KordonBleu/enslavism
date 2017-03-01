@@ -18,29 +18,31 @@ test('register', t => {
 });
 
 test('addSlaves', t => {
-	let slaves = [
-		{
-			id: 666, // TODO: remove this
-			userData: {
-				stuff: 'sfharnehsarne',
-				more: 432
-			}
-		},
-		{
-			id: 42, // TODO: remove this
-			userData: {
-				welp: 'arst',
-				more: null,
-				less: true
-			}
-		}],
-		buf = proto.addSlaves.serialize((function*() {
-			yield [slaves[0].id, slaves[0]];
-			yield [slaves[1].id, slaves[1]];
-		})()),
+	let slaves = new Map();
+	slaves.set(666, {
+		userData: {
+			stuff: 'sfharnehsarne',
+			more: 432
+		}
+	});
+	slaves.set(42, {
+		userData: {
+			welp: 'arst',
+			more: null,
+			less: true
+		}
+	});
+
+	let buf = proto.addSlaves.serialize(slaves.entries()),
 		res = proto.addSlaves.deserialize(buf);
 
-	t.deepEqual(slaves, res);
+	let slaveIter = slaves.entries();
+	for (let [id, slave] of res) {
+		let [originalId, originalSlave] = slaveIter.next().value;
+		
+		t.is(originalId, id);
+		t.deepEqual(originalSlave, slave);
+	}
 
 	t.is(proto.getSerializator(buf), proto.addSlaves);
 });

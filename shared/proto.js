@@ -57,21 +57,20 @@ class AddSlavesSerializator extends Serializator {
 
 		return aView.buffer;
 	}
-	deserialize(buf) {
-		let slaves = [],
-			offset = 1,
+	* deserialize(buf) {
+		let offset = 1,
 			dView = new DataView(buf);
 
 		while (offset !== buf.byteLength) {
 			let userDataLength = dView.getUint16(offset + 4);
-			slaves.push({
-				id: dView.getUint32(offset),
-				userData: JSON.parse(convert.bufferToString(buf.slice(offset + 6, offset + 6 + userDataLength)))
-			});
+			yield [
+				dView.getUint32(offset), // id
+				{ // slave
+					userData: JSON.parse(convert.bufferToString(buf.slice(offset + 6, offset + 6 + userDataLength)))
+				}
+			];
 			offset += 6 + userDataLength;
 		}
-
-		return slaves; // TODO: return an iterator, not an array
 	}
 }
 
