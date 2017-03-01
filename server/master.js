@@ -45,12 +45,6 @@ export default class Master extends EventEmitter {
 		this._slaves = new SocketList();
 		this._clients = new SocketList();
 
-		function sendSource(res) {
-			res.writeHead(200, {'Content-Type': 'application/javascript'});
-			generateClientSource().then(source => {
-				res.end(source.code);
-			}).catch(console.error);
-		}
 
 		// fat arrow function needed for lexical scoping
 		const wsSrvFactory = type => {
@@ -84,54 +78,53 @@ export default class Master extends EventEmitter {
 
 
 		if (typeof server === 'number') {
-			this._httpServer = http.createServer((req, res) => {
-				if (req.url === '/enslavism/client.js') sendSource(res);
+			let port = server;
+			server = http.createServer((req, res) => {
+				if (req.url === '/enslavism/client.js') Master._sendSource(res);
 				else {
 					res.writeHead(404);
 					res.end('404\nNot found');
 				}
 			});
 
-			this._httpServer.listen(server);
+			server.listen(port);
 		} else {
 			let userDefReqListeners = server.listeners('request');
 
 			server.removeAllListeners('request');
 
 			server.on('request', (req, res) => {
-				if (req.url === '/enslavism/client.js') sendSource(res);
+				if (req.url === '/enslavism/client.js') Master._sendSource(res);
 				else {
 					for (let listener of userDefReqListeners) {
 						listener.call(server, req, res);
 					}
 				}
 			});
-
-			this._httpServer = server;
 		}
 
 
-		this._slavesSocket = wsSrvFactory('slave');
-		this._clientsSocket = wsSrvFactory('client');
+		let slavesSocket = wsSrvFactory('slave'),
+			clientsSocket = wsSrvFactory('client');
 
-		this._httpServer.on('upgrade', (request, socket, head) => {
+		server.on('upgrade', (request, socket, head) => {
 			// see https://github.com/websockets/ws/pull/885
 			const pathname = url.parse(request.url).pathname;
 
 			if (pathname === '/enslavism/slaves') {
-				this._slavesSocket.handleUpgrade(request, socket, head, ws => {
-					this._slavesSocket.emit('connection', ws);
+				slavesSocket.handleUpgrade(request, socket, head, ws => {
+					slavesSocket.emit('connection', ws);
 				});
 			} else if (pathname === '/enslavism/clients') {
-				this._clientsSocket.handleUpgrade(request, socket, head, ws => {
-					this._clientsSocket.emit('connection', ws);
+				clientsSocket.handleUpgrade(request, socket, head, ws => {
+					clientsSocket.emit('connection', ws);
 				});
 			} else {
 				socket.destroy();
 			}
 		});
 
-		this._slavesSocket.on('connection', ws => {
+		slavesSocket.on('connection', ws => {
 			let id = this._slaves.add(ws);
 
 			ws.on('message', msg => {
@@ -149,7 +142,7 @@ export default class Master extends EventEmitter {
 						break;
 					}
 					case proto.answerToClient: {
-						let receiver = this.findClient(proto.answerToClient.getDestId(msg));
+						let receiver = this._clients.find(proto.answerToClient.getDestId(msg));
 						if (receiver !== undefined) {
 							proto.answerFromSlave.setDestId(msg, id);
 							receiver.send(msg);
@@ -157,7 +150,7 @@ export default class Master extends EventEmitter {
 						break;
 					}
 					case proto.iceCandidateToClient: {
-						let receiver = this.findClient(proto.iceCandidateToClient.getDestId(msg));
+						let receiver = this._clients.find(proto.iceCandidateToClient.getDestId(msg));
 						if (receiver !== undefined) {
 							proto.iceCandidateFromSlave.setDestId(msg, id);
 							receiver.send(msg);
@@ -165,7 +158,7 @@ export default class Master extends EventEmitter {
 						break;
 					}
 					case proto.rejectToClient: {
-						let receiver = this.findClient(proto.rejectToClient.deserialize(msg));
+						let receiver = this._clients.find(proto.rejectToClient.deserialize(msg));
 						if (receiver !== undefined) {
 							receiver.send(proto.rejectFromSlave.serialize(id));
 						}
@@ -183,7 +176,7 @@ export default class Master extends EventEmitter {
 			});
 		});
 
-		this._clientsSocket.on('connection', ws => {
+		clientsSocket.on('connection', ws => {
 			let id = this._clients.add(ws);
 
 			ws.send(proto.addSlaves.serialize(this._slaves.entries()));
@@ -193,7 +186,7 @@ export default class Master extends EventEmitter {
 
 				switch (proto.getSerializator(msg)) {
 					case proto.offerToSlave: {
-						let receiver = this.findSlave(proto.offerFromClient.getDestId(msg));
+						let receiver = this._slaves.find(proto.offerFromClient.getDestId(msg));
 						if (receiver !== undefined) {
 							proto.offerFromClient.setDestId(msg, id);
 							receiver.send(msg);
@@ -201,7 +194,7 @@ export default class Master extends EventEmitter {
 						break;
 					}
 					case proto.iceCandidateToSlave: {
-						let receiver = this.findSlave(proto.iceCandidateToSlave.getDestId(msg));
+						let receiver = this._slaves.find(proto.iceCandidateToSlave.getDestId(msg));
 						if (receiver !== undefined) {
 							proto.iceCandidateFromClient.setDestId(msg, id);
 							receiver.send(msg);
@@ -215,10 +208,11 @@ export default class Master extends EventEmitter {
 			});
 		});
 	}
-	findSlave(id) { // get slave corresponding to this id
-		return this._slaves.find(id);
-	}
-	findClient(id) { // get client corresponding to this id
-		return this._clients.find(id);
+
+	static _sendSource(res) {
+		res.writeHead(200, {'Content-Type': 'application/javascript'});
+		generateClientSource().then(source => {
+			res.end(source.code);
+		}).catch(console.error);
 	}
 }
