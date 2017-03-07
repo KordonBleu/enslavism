@@ -23,7 +23,11 @@ export default class SlaveConnection extends EventEmitter {
 		});
 	}
 	close() {
-		if (this.slaveCon !== undefined) this.slaveCon.close();
+		if (this.slaveCon !== undefined) {
+			this.slaveCon.close();
+			this.slaveCon = undefined;
+			this.dataChannels = {};
+		}
 	}
 	createDataChannel(dcName, dcConfig) {
 		return new Promise((resolve, reject) => {

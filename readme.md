@@ -107,6 +107,11 @@ slaveCo.addEventListener('rejected', () => {
 
 Connect to a slave.
 
+#### slaveConnection.close()
+
+Close the connection. It can be reopened by calling [`slaveConnection.connect()`](#slaveconnectionconnect) again.
+Note that all the `DataChannel`s that were opened from this `SlaveConnection` will be closed.
+
 #### slaveConnection.createDataChannel(dataChannelName, [dcOptions])
 
 Create a new data channel. Returns a Promise that resolves with the data channel.
