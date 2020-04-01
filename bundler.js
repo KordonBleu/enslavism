@@ -3,7 +3,7 @@ const rollup = require('rollup'),
 	eslint = require('rollup-plugin-eslint');
 
 rollup.rollup({
-	entry: 'server/index.js',
+	input: 'server/index.js',
 	plugins: [
 		alias({
 			'<@convert@>': 'server/convert.js'
@@ -13,7 +13,7 @@ rollup.rollup({
 }).then(bundle => {
 	bundle.write({
 		format: 'cjs',
-		dest: 'bundle.js'
+		file: 'bundle.js',
 	});
 	console.log('Enslavism bundle generated');
 });
