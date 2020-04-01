@@ -23,17 +23,17 @@
     "game"
   ],
   "dependencies": {
-    "electron-webrtc-patched": "0.3.x",
-    "ws": "2.x",
-    "ipaddr.js": "1.x",
     "cookie": "0.x",
+    "ipaddr.js": "1.x",
     "rollup": "0.x",
     "rollup-plugin-alias": "1.x",
-    "rollup-plugin-eslint": "3.x"
+    "rollup-plugin-eslint": "3.x",
+    "wrtc": "^0.4.4",
+    "ws": "^7.2.3"
   },
   "optionalDependencies": {
-    "bufferutil": "2.x",
-    "utf-8-validate": "3.x"
+    "bufferutil": "4.x",
+    "utf-8-validate": "5.x"
   },
   "devDependencies": {
     "ava": "0.x",
