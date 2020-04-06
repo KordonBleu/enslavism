@@ -32,8 +32,8 @@ I recommend reading [this blog article](https://getkey.eu/blog/5862b0cf/webrtc:-
 
 ```sh
 $ npm install
-$ node example/master.js
-$ node example/slave.js # in a different terminal
+$ node examples/master.js
+$ node examples/slave.js # in a different terminal
 ```
 
 Now open your browser at `http://localhost:8081/`.

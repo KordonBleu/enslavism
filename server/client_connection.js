@@ -1,7 +1,7 @@
 import * as proto from '../shared/proto.js';
 
 const EventEmitter = require('events'),
-	webrtc = require('electron-webrtc-patched')();
+	webrtc = require('wrtc');
 
 export default class ClientConnection extends EventEmitter {
 	constructor(id, sdp, slave) {
@@ -12,11 +12,11 @@ export default class ClientConnection extends EventEmitter {
 		this.dataChannels = {};
 
 		this.clientCon = new webrtc.RTCPeerConnection();
-		this.clientCon.on('icecandidate', iceEv => {
+		this.clientCon.addEventListener('icecandidate', iceEv => {
 			if (!iceEv.candidate) return;
 			this.slave.ws.send(proto.iceCandidateToClient.serialize(id, iceEv.candidate));
 		});
-		this.clientCon.on('datachannel', ev => {
+		this.clientCon.addEventListener('datachannel', ev => {
 			this.emit('datachannel', ev.channel);
 		});
 

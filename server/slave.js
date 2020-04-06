@@ -3,7 +3,7 @@ import * as convert from './convert.js';
 import ClientConnection from './client_connection.js';
 
 const EventEmitter = require('events'),
-	webrtc = require('electron-webrtc-patched')(),
+	webrtc = require('wrtc'),
 	WebSocket = require('ws'),
 	cookie = require('cookie');
 

@@ -25,12 +25,12 @@ function generateClientSource() {
 		}
 		return new Promise((resolve, reject) => {
 			rollup.rollup({
-				entry: __dirname + '/client/master_connection.js',
+				input: __dirname + '/client/master_connection.js',
 				plugins
 			}).then(bundle => {
 				clientSource = bundle.generate({
 					format: 'iife',
-					moduleName: 'MasterConnection'
+					name: 'MasterConnection'
 				});
 				resolve(clientSource);
 			}).catch(reject);
