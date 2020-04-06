@@ -12,7 +12,7 @@ export default class SocketList {
 			this.wrapMode = true;
 		}
 		if (this.wrapMode) {
-			let id = this._findAvailableId();
+			const id = this._findAvailableId();
 			if (id === undefined) throw new Error('All IDs are taken');
 
 			this._idWs.set(id, ws);
@@ -30,7 +30,7 @@ export default class SocketList {
 	}
 	_findAvailableId() {
 		let prevKey = null;
-		for (let key of this._idWs.values()) {
+		for (const key of this._idWs.values()) {
 			if (prevKey !== null && key - prevKey > 1) {
 				// if the difference between two IDs is greater than 1 there is a slot avalaible
 				return prevKey + 1;

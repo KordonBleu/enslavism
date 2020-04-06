@@ -1,6 +1,6 @@
 import * as convert from '<@convert@>';
 
-let serializators = [];
+const serializators = [];
 
 class Serializator {
 	constructor(type) {
@@ -14,8 +14,8 @@ class JsonSerializator extends Serializator {
 		super(type);
 	}
 	serialize(userData) {
-		let userDataBuf = convert.stringToBuffer(JSON.stringify(userData)),
-			view = new Uint8Array(1 + userDataBuf.byteLength);
+		const userDataBuf = convert.stringToBuffer(JSON.stringify(userData));
+		const view = new Uint8Array(1 + userDataBuf.byteLength);
 
 		view[0] = this.type;
 		view.set(new Uint8Array(userDataBuf), 1);
@@ -32,22 +32,22 @@ class AddSlavesSerializator extends Serializator {
 		super(type);
 	}
 	serialize(slaveIter) {
-		let userDataBufsLength = 0,
-			userDataBufs = new Map();
+		let userDataBufsLength = 0;
+		const userDataBufs = new Map();
 
-		for (let [id, slave] of slaveIter) {
-			let buf = convert.stringToBuffer(JSON.stringify(slave.userData));
+		for (const [id, slave] of slaveIter) {
+			const buf = convert.stringToBuffer(JSON.stringify(slave.userData));
 			userDataBufsLength += buf.byteLength;
 			userDataBufs.set(id, buf);
 		}
 
-		let aView = new Uint8Array(1 + userDataBufsLength + userDataBufs.size*6),
-			dView = new DataView(aView.buffer),
-			offset = 1;
+		const aView = new Uint8Array(1 + userDataBufsLength + userDataBufs.size*6);
+		const dView = new DataView(aView.buffer);
+		let offset = 1;
 
 		dView.setUint8(0, this.type);
 
-		for (let [id, userDataBuf] of userDataBufs.entries()) {
+		for (const [id, userDataBuf] of userDataBufs.entries()) {
 			dView.setUint32(offset, id);
 			dView.setUint16(offset + 4, userDataBuf.byteLength);
 			aView.set(new Uint8Array(userDataBuf), offset + 6);
@@ -58,16 +58,16 @@ class AddSlavesSerializator extends Serializator {
 		return aView.buffer;
 	}
 	* deserialize(buf) {
-		let offset = 1,
-			dView = new DataView(buf);
+		let offset = 1;
+		const dView = new DataView(buf);
 
 		while (offset !== buf.byteLength) {
-			let userDataLength = dView.getUint16(offset + 4);
+			const userDataLength = dView.getUint16(offset + 4);
 			yield [
 				dView.getUint32(offset), // id
 				{ // slave
-					userData: JSON.parse(convert.bufferToString(buf.slice(offset + 6, offset + 6 + userDataLength)))
-				}
+					userData: JSON.parse(convert.bufferToString(buf.slice(offset + 6, offset + 6 + userDataLength))),
+				},
 			];
 			offset += 6 + userDataLength;
 		}
@@ -80,12 +80,12 @@ class RoutableMessageSerializator extends Serializator {
 		super(type);
 	}
 	setDestId(buf, newId) { // used for rerouting for example `offerToSlave` to `offerFromClient` by the master
-		let dView = new DataView(buf);
+		const dView = new DataView(buf);
 		dView.setUint8(0, this.type);
 		dView.setUint32(1, newId);
 	}
 	getDestId(buf) {
-		let dView = new DataView(buf);
+		const dView = new DataView(buf);
 		return dView.getUint32(1);
 	}
 }
@@ -95,9 +95,9 @@ class SessionDescriptionSerializator extends RoutableMessageSerializator {
 		super(type);
 	}
 	serialize(id, sdp) {
-		let sdpBuf = convert.stringToBuffer(sdp),
-			aView = new Uint8Array(5 + sdpBuf.byteLength),
-			dView = new DataView(aView.buffer);
+		const sdpBuf = convert.stringToBuffer(sdp);
+		const aView = new Uint8Array(5 + sdpBuf.byteLength);
+		const dView = new DataView(aView.buffer);
 
 		aView[0] = this.type;
 		dView.setUint32(1, id);
@@ -106,11 +106,11 @@ class SessionDescriptionSerializator extends RoutableMessageSerializator {
 		return aView.buffer;
 	}
 	deserialize(buf) {
-		let dView = new DataView(buf);
+		const dView = new DataView(buf);
 
 		return {
 			id: dView.getUint32(1),
-			sdp: convert.bufferToString(buf.slice(5))
+			sdp: convert.bufferToString(buf.slice(5)),
 		};
 	}
 }
@@ -121,8 +121,8 @@ class IceCandidateSerializator extends RoutableMessageSerializator {
 	}
 	serialize(id, candidate) {
 		if (candidate === null) {
-			let aView = new Uint8Array(6),
-				dView = new DataView(aView.buffer);
+			const aView = new Uint8Array(6);
+			const dView = new DataView(aView.buffer);
 
 			aView[0] = this.type;
 			dView.setUint32(1, id);
@@ -130,10 +130,10 @@ class IceCandidateSerializator extends RoutableMessageSerializator {
 
 			return aView.buffer;
 		} else {
-			let sdpMidBuf = convert.stringToBuffer(candidate.sdpMid),
-				candidateBuf = convert.stringToBuffer(candidate.candidate),
-				aView = new Uint8Array(8 + candidateBuf.byteLength + sdpMidBuf.byteLength),
-				dView = new DataView(aView.buffer);
+			const sdpMidBuf = convert.stringToBuffer(candidate.sdpMid);
+			const candidateBuf = convert.stringToBuffer(candidate.candidate);
+			const aView = new Uint8Array(8 + candidateBuf.byteLength + sdpMidBuf.byteLength);
+			const dView = new DataView(aView.buffer);
 
 			aView[0] = this.type;
 			dView.setUint32(1, id);
@@ -146,20 +146,20 @@ class IceCandidateSerializator extends RoutableMessageSerializator {
 		}
 	}
 	deserialize(buf) {
-		let dView = new DataView(buf),
-			sdpMidBufLength = dView.getUint8(5);
+		const dView = new DataView(buf);
+		const sdpMidBufLength = dView.getUint8(5);
 
 		if (sdpMidBufLength === 0) {
 			return {
 				id: dView.getUint32(1),
-				candidate: null
+				candidate: null,
 			};
 		} else {
 			return {
 				id: dView.getUint32(1),
 				sdpMid: convert.bufferToString(buf.slice(6, 6 + sdpMidBufLength)),
 				sdpMLineIndex: dView.getUint16(6 + sdpMidBufLength),
-				candidate: convert.bufferToString(buf.slice(8 + sdpMidBufLength))
+				candidate: convert.bufferToString(buf.slice(8 + sdpMidBufLength)),
 			};
 		}
 	}
@@ -170,8 +170,8 @@ class RejectionSerializator extends Serializator {
 		super(type);
 	}
 	serialize(id) {
-		let buf = new ArrayBuffer(5),
-			dView = new DataView(buf);
+		const buf = new ArrayBuffer(5);
+		const dView = new DataView(buf);
 
 		dView.setUint8(0, this.type);
 		dView.setUint32(1, id);
@@ -179,28 +179,28 @@ class RejectionSerializator extends Serializator {
 		return buf;
 	}
 	deserialize(buf) {
-		let dView = new DataView(buf);
+		const dView = new DataView(buf);
 
 		return dView.getUint32(1);
 	}
 }
 
-export let register = new JsonSerializator(0),
-	addSlaves = new AddSlavesSerializator(1),
-	removeSlaves = new JsonSerializator(2),
-	offerToSlave = new SessionDescriptionSerializator(3),
-	offerFromClient = new SessionDescriptionSerializator(4),
-	answerToClient = new SessionDescriptionSerializator(5),
-	answerFromSlave = new SessionDescriptionSerializator(6),
-	iceCandidateToSlave = new IceCandidateSerializator(7),
-	iceCandidateFromClient = new IceCandidateSerializator(8),
-	iceCandidateToClient = new IceCandidateSerializator(9),
-	iceCandidateFromSlave = new IceCandidateSerializator(10),
-	rejectToClient = new RejectionSerializator(11),
-	rejectFromSlave = new RejectionSerializator(12);
+export const register = new JsonSerializator(0);
+export const addSlaves = new AddSlavesSerializator(1);
+export const removeSlaves = new JsonSerializator(2);
+export const offerToSlave = new SessionDescriptionSerializator(3);
+export const offerFromClient = new SessionDescriptionSerializator(4);
+export const answerToClient = new SessionDescriptionSerializator(5);
+export const answerFromSlave = new SessionDescriptionSerializator(6);
+export const iceCandidateToSlave = new IceCandidateSerializator(7);
+export const iceCandidateFromClient = new IceCandidateSerializator(8);
+export const iceCandidateToClient = new IceCandidateSerializator(9);
+export const iceCandidateFromSlave = new IceCandidateSerializator(10);
+export const rejectToClient = new RejectionSerializator(11);
+export const rejectFromSlave = new RejectionSerializator(12);
 
 export function getSerializator(buffer) {
-	let enumVal = new Uint8Array(buffer)[0];
+	const enumVal = new Uint8Array(buffer)[0];
 
 	return serializators[enumVal];
 }

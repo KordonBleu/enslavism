@@ -1,7 +1,7 @@
 import * as proto from '../shared/proto.js';
 import EventEmitter from './event_emitter.js';
 
-var RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection;
+const RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection;
 
 export default class SlaveConnection extends EventEmitter {
 	constructor(id, userData, master) {
@@ -17,7 +17,7 @@ export default class SlaveConnection extends EventEmitter {
 		// uses the parent MasterConnection for signaling
 
 		this.slaveCon = new RTCPeerConnection(null);
-		this.slaveCon.addEventListener('icecandidate', candidate => {
+		this.slaveCon.addEventListener('icecandidate', (candidate) => {
 			if(!candidate.candidate) return;
 			this.master._masterSocket.send(proto.iceCandidateToSlave.serialize(this.id, candidate.candidate));
 		});
@@ -43,8 +43,8 @@ export default class SlaveConnection extends EventEmitter {
 				this.dataChannels[dcName] = dc;
 				resolve(dc);
 			});
-			this.slaveCon.createOffer().then(offer => {
-				let desc = new RTCSessionDescription(offer);
+			this.slaveCon.createOffer().then((offer) => {
+				const desc = new RTCSessionDescription(offer);
 				this.slaveCon.setLocalDescription(desc);
 				this.master._masterSocket.send(proto.offerToSlave.serialize(this.id, offer.sdp));
 			});
@@ -53,7 +53,7 @@ export default class SlaveConnection extends EventEmitter {
 	_setRemoteDescription(sdp) {
 		this.slaveCon.setRemoteDescription(new RTCSessionDescription({
 			type: 'answer',
-			sdp
+			sdp,
 		}));
 	}
 	_addIceCandidate(candidate, sdpMid, sdpMLineIndex) {

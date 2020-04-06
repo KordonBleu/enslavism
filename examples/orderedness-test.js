@@ -10,18 +10,18 @@ iptables -D OUTPUT -m statistic --mode random --probability 0.1 -j DROP
 
 document.cookie = 'username=getkey';
 
-let masterCon = new MasterConnection('ws://localhost:8081');
+const masterCon = new MasterConnection('ws://localhost:8081');
 
-masterCon.addEventListener('slaveadded', slaveCo => {
+masterCon.addEventListener('slaveadded', (slaveCo) => {
 	console.log('new slave', slaveCo);
 
 	slaveCo.createDataChannel('test', {
-		ordered: false
-	}).then(dc => {
-		dc.addEventListener('message', msg => {
+		ordered: false,
+	}).then((dc) => {
+		dc.addEventListener('message', (msg) => {
 			console.log(msg);
 		});
-		for (let i = 1; i != 100; ++i) dc.send('Orderedness test #' + i);
+		for (let i = 1; i !== 100; ++i) dc.send('Orderedness test #' + i);
 	});
 
 	slaveCo.addEventListener('rejected', () => {

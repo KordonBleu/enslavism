@@ -1,19 +1,19 @@
-import alias from 'rollup-plugin-alias';
-import eslint from 'rollup-plugin-eslint';
+import alias from '@rollup/plugin-alias';
 
 export default [
 	{
 		input: 'server/index.js',
 		output: {
 			file: 'dist/server.bundle.js',
-			format: 'cjs'
+			format: 'cjs',
 		},
 		plugins: [
 			alias({
-				'<@convert@>': 'server/convert.js'
+				entries: {
+					'<@convert@>': 'server/convert.js',
+				},
 			}),
-			eslint()
-		]
+		],
 	},
 	{
 		input: 'client/master_connection.js',
@@ -24,9 +24,10 @@ export default [
 		},
 		plugins: [
 			alias({
-				'<@convert@>': './../client/convert.js'
+				entries: {
+					'<@convert@>': './../client/convert.js',
+				},
 			}),
-			eslint(),
-		]
+		],
 	},
 ];
