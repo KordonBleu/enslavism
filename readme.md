@@ -39,13 +39,6 @@ $ node examples/slave.js # in a third terminal
 
 Now open your browser at `http://localhost:8081/`.
 
-
-## Contributing
-
-If you modify server code, you have to run `node bundler.js` to bundle your changes.
-If you modify client code, the master takes care of re-bundling for you in development environment. In production (i.e. `$NODE_ENV` is set to `production`) you have to restart the master.
-
-
 ## Browser API
 
 You need to include `/enslavism/client.js` in your HTML document like so:
