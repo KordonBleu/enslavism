@@ -31,9 +31,10 @@ I recommend reading [this blog article](https://getkey.eu/blog/5862b0cf/webrtc:-
 ## Try the examples
 
 ```sh
-$ npm install
-$ node examples/master.js
-$ node examples/slave.js # in a different terminal
+$ yarn install # or npm install
+$ yarn watch # or npm run watch
+$ node examples/master.js # in a second terminal
+$ node examples/slave.js # in a third terminal
 ```
 
 Now open your browser at `http://localhost:8081/`.

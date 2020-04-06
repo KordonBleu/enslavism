@@ -7,36 +7,10 @@ const EventEmitter = require('events'),
 	url = require('url'),
 	WebSocketServer = require('ws').Server,
 	cookie = require('cookie'),
-	rollup = require('rollup'),
-	alias = require('rollup-plugin-alias');
+	path = require('path'),
+	fs = require('fs');
 
-let clientSource = null;
-function generateClientSource() {
-	if (clientSource !== null && process.env.NODE_ENV === 'production') return Promise.resolve(clientSource);
-	else {
-		let plugins = [
-			alias({
-				'<@convert@>': './../client/convert.js'
-			})
-		];
-		if (process.env.NODE_ENV !== 'production') {
-			const eslint = require('rollup-plugin-eslint');
-			plugins.push(eslint());
-		}
-		return new Promise((resolve, reject) => {
-			rollup.rollup({
-				input: __dirname + '/client/master_connection.js',
-				plugins
-			}).then(bundle => {
-				clientSource = bundle.generate({
-					format: 'iife',
-					name: 'MasterConnection'
-				});
-				resolve(clientSource);
-			}).catch(reject);
-		});
-	}
-}
+const clientSource = fs.readFileSync(path.join(__dirname, 'client.bundle.js'));
 
 export default class Master extends EventEmitter {
 	constructor(server) {
@@ -211,8 +185,6 @@ export default class Master extends EventEmitter {
 
 	static _sendSource(res) {
 		res.writeHead(200, {'Content-Type': 'application/javascript'});
-		generateClientSource().then(source => {
-			res.end(source.code);
-		}).catch(console.error);
+		res.end(clientSource);
 	}
 }

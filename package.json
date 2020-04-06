@@ -2,7 +2,7 @@
   "name": "enslavism",
   "version": "0.8.5",
   "description": "Framework to manage distributed WebRTC servers that communicate with browser clients",
-  "main": "bundle.js",
+  "main": "dist/server.bundle.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/KordonBleu/enslavism.git"
@@ -43,7 +43,9 @@
   },
   "scripts": {
     "test": "node_modules/ava/cli.js tests/",
-    "postinstall": "node bundler.js"
+	"watch": "rollup -cw",
+	"build": "rollup -c",
+	"prepublish": "yarn build"
   },
   "ava": {
     "require": [
